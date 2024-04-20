@@ -1,0 +1,20 @@
+//Alta de usuario (POST)
+{
+    "nombre": "Juan",
+    "apellido": "Pérez",
+    "email": "juan@example.com",
+    "password": "password"
+}
+
+//Modificar usuario (PUT)
+{
+    "id": 1,
+    "nombre": "Juan",
+    "apellido": "Gómez",
+    "email": "juan@example.com"
+}
+
+//Eliminar usuario (DELETE)
+{
+    "id": 1
+}
