@@ -1,0 +1,23 @@
+//Alta de anuncio (POST)
+{
+    "titulo": "yaps no viene",
+    "descripcion": "En el dia de la fecha se dictaran clases virtuales",
+    "imagen": "1.jpg",
+    "fechaDesde": "19/05/2024",
+    "fechaHasta": "20/05/2024"
+}
+
+//Modificar anuncio (PUT)
+{
+    "id": 1,
+    "titulo": "suspencion de clases",
+    "descripcion": "En el dia de la fecha se suspenden las clases por lluvia",
+    "imagen": "2.jpg",
+    "fechaDesde": "22/04/2024",
+    "fechaHasta": "22/04/2024"
+}
+
+//Eliminar anuncio (DELETE)
+{
+    "id": 1
+}
