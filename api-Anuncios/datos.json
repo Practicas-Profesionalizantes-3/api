@@ -4,7 +4,11 @@
     "descripcion": "En el dia de la fecha se dictaran clases virtuales",
     "imagen": "1.jpg",
     "fechaDesde": "19/05/2024",
-    "fechaHasta": "20/05/2024"
+    "fechaHasta": "20/05/2024",
+    "carrera": "Analista de sistemas",
+    "anio": 2,
+    "comision": "2da",
+    "estado": "vigente"
 }
 
 //Modificar anuncio (PUT)

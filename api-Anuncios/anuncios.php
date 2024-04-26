@@ -34,7 +34,7 @@ function crearAnuncio() {
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['titulo']) || !isset($data['descripcion']) || !isset($data['imagen']) || !isset($data['fechaDesde']) || !isset($data['fechaHasta'])) {
+    if (!isset($data['titulo']) || !isset($data['descripcion']) || !isset($data['imagen']) || !isset($data['fechaDesde']) || !isset($data['fechaHasta']) || !isset($data['carrera']) || !isset($data['anio']) || !isset($data['comision']) || !isset($data['estado'])) {
         throw new Exception('Todos los campos son obligatorios');
     }
 
@@ -43,12 +43,17 @@ function crearAnuncio() {
     $imagen = $data['imagen'];
     $fechaDesde = $data['fechaDesde'];
     $fechaHasta = $data['fechaHasta'];
+    $carrera = $data['carrera'];
+    $anio = $data['anio'];
+    $comision = $data['comision'];
+    $estado = $data['estado'];
 
-    $stmt = $pdo->prepare("INSERT INTO anuncios (titulo, descripcion, imagen, fechaDesde, fechaHasta) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$titulo, $descripcion, $imagen, $fechaDesde, $fechaHasta]);
+    $stmt = $pdo->prepare("INSERT INTO anuncios (titulo, descripcion, imagen, fechaDesde, fechaHasta, carrera, anio, comision, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$titulo, $descripcion, $imagen, $fechaDesde, $fechaHasta, $carrera, $anio, $comision, $estado]);
 
     http_response_code(201); // Creado
-    echo json_encode(['mensaje' => 'anuncio creado correctamente']);
+   
+    echo json_encode(['mensaje' => "anuncio Nº ".$pdo->lastInsertId()." creado correctamente perri"]);
 }
 
 function modificarAnuncio() {
