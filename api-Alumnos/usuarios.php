@@ -6,33 +6,13 @@ header('Content-Type: application/json');
 try {
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'GET':
-            if (isset($_GET['id'])) {
-                obtenerUsuario();
-            } elseif (isset($_GET['nombre'])) {
-                filtrarUsuariosPorNombre();
-            }elseif (isset($_GET['apellido'])) {
-                filtrarUsuariosPorApellido();
-            }elseif (isset($_GET['dni'])) {
-                filtrarUsuariosPorDni();
-            }elseif (isset($_GET['email'])) {
-                filtrarUsuariosPorEmail();
-            }elseif (isset($_GET['carrera'])) {
-                filtrarUsuariosPorCarrera();
-            }elseif (isset($_GET['año'])) {
-                filtrarUsuariosPorAnio();
-            }elseif (isset($_GET['comision'])) {
-                filtrarUsuariosPorComision();
-            }elseif(isset($_GET['estado'])) {
-                filtrarUsuariosPorEstado();
-            } else {
-                listarUsuarios();
-            }
+            listarUsuarios();
             break;
         case 'POST':
             altaUsuario();
             break;
         case 'PUT':
-                modificarUsuario();
+            modificarUsuario();
             break;
         case 'DELETE':
             bajaUsuario();
@@ -125,30 +105,53 @@ function bajaUsuario() {
     echo json_encode(['mensaje' => 'Usuario modificado correctamente']);
 }
 
-function obtenerUsuario() {
-    global $pdo;
 
-    $id = $_GET['id'];
-
-    $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE id = ?");
-    $stmt->execute([$id]);
-
-    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$usuario) {
-        http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'Usuario no encontrado']);
-        return;
-    }
-
-    echo json_encode($usuario);
-}
 
 function listarUsuarios() {
     global $pdo;
 
-    $stmt = $pdo->query("SELECT * FROM usuarios");
+    $apellido = isset($_GET['apellido'])? $_GET['apellido'] : null;
+    $id = isset($_GET['id'])? (int)$_GET['id'] : null;
+    $dni = isset($_GET['dni'])? (int)$_GET['dni'] : null;
+    $email = isset($_GET['email'])? $_GET['email'] : null;
+    $carrera = isset($_GET['carrera'])? $_GET['carrera'] : null;
+    $anio = isset($_GET['anio'])? (int)$_GET['anio'] : null;
+    $comision = isset($_GET['comision'])? $_GET['comision'] : null;
+    $estado = isset($_GET['estado'])? $_GET['estado'] : null;
+
+    if ($id) {
+        $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE id =?");
+        $stmt->execute([$id]);
+    } elseif($apellido) {
+        $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE apellido LIKE?");
+        $stmt->execute(["%$apellido%"]);
+    } elseif($dni){
+        $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE dni=?");
+        $stmt->execute([$dni]);
+    } elseif($email){
+        $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email LIKE ?");
+        $stmt->execute(["%$email%"]);
+    } elseif($carrera){
+        $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE carrera LIKE ?");
+        $stmt->execute(["%$carrera%"]);
+    } elseif($anio){
+        $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE anio=?");
+        $stmt->execute([$anio]);
+    } elseif($comision){
+        $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE comision LIKE ?");
+        $stmt->execute(["%$comision%"]);
+    } elseif($estado){
+        $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE estado LIKE ?");
+        $stmt->execute(["%$estado%"]);
+    }
+
     $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if (!$usuarios) {
+        http_response_code(404); // No encontrado
+        echo json_encode(['error' => 'No se encontraron usuarios']);
+        return;
+    }
 
     echo json_encode($usuarios);
 }
