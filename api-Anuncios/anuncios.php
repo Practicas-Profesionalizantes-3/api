@@ -6,15 +6,7 @@ header('Content-Type: application/json');
 try {
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'GET':
-            if (isset($_GET['id'])) {
-                obtenerAnuncio();
-            } elseif (isset($_GET['titulo'])) {
-                filtrarAnunciosPorTitulo();
-            }elseif (isset($_GET['fechaDesde'])) {
-                filtrarAnunciosPorFechaDesde();
-            } else {
                 listarAnuncios();
-            }
             break;
         case 'POST':
             crearAnuncio();
@@ -111,88 +103,58 @@ function borrarAnuncio() {
     echo json_encode(['mensaje' => 'Anuncio eliminado correctamente']);
 }
 
-function obtenerAnuncio() {
-    global $pdo;
-
-    $id = $_GET['id'];
-
-    $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE id = ?");
-    $stmt->execute([$id]);
-
-    $anuncio = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$anuncio) {
-        http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'Anuncio no encontrado']);
-        return;
-    }
-
-    echo json_encode($anuncio);
-}
 
 function listarAnuncios() {
     global $pdo;
 
-    $stmt = $pdo->query("SELECT * FROM anuncios");
-    $anuncios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $titulo = isset($_GET['titulo'])? $_GET['titulo'] : null;
+    $id = isset($_GET['id'])? (int)$_GET['id'] : null;
+    $descripcion = isset($_GET['descripcion'])? $_GET['descripcion'] : null;
+    $carrera = isset($_GET['carrera'])? $_GET['carrera'] : null;
+    $anio = isset($_GET['anio'])? (int)$_GET['anio'] : null;
+    $comision = isset($_GET['comision'])? $_GET['comision'] : null;
+    $estado = isset($_GET['estado'])? $_GET['estado'] : null;
+    $fechaDesde = isset($_GET['fechaDesde'])? $_GET['fechaDesde'] : null;
+    $fechaHasta = isset($_GET['fechaHasta'])? $_GET['fechaHasta'] : null;
 
-    echo json_encode($anuncios);
-}
-
-function filtrarAnunciosPorTitulo() {
-    global $pdo;
-
-    $titulo = $_GET['titulo'];
-
-    $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE titulo LIKE ?");
-    $stmt->execute(["%$titulo%"]);
+    if ($id) {
+        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE id =?");
+        $stmt->execute([$id]);
+    } elseif($titulo) {
+        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE titulo LIKE?");
+        $stmt->execute(["%$titulo%"]);
+    } elseif($descripcion){
+        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE descripcion LIKE ?");
+        $stmt->execute(["%$descripcion%"]);
+    } elseif($carrera){
+        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE carrera LIKE ?");
+        $stmt->execute(["%$carrera%"]);
+    } elseif($anio){
+        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE anio=?");
+        $stmt->execute([$anio]);
+    } elseif($comision){
+        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE comision LIKE ?");
+        $stmt->execute(["%$comision%"]);
+    } elseif($estado){
+        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE estado LIKE ?");
+        $stmt->execute(["%$estado%"]);
+    }elseif($fechaDesde){
+        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE fechaDesde LIKE ?");
+        $stmt->execute(["%$fechaDesde%"]);
+    }elseif($fechaHasta){
+        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE fechaHasta LIKE ?");
+        $stmt->execute(["%$fechaHasta%"]);
+    }
 
     $anuncios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if (!$anuncios) {
         http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'No se encontraron usuarios']);
+        echo json_encode(['error' => 'No se encontraron anuncios$anuncios']);
         return;
     }
 
     echo json_encode($anuncios);
 }
 
-function filtrarAnunciosPorFechaDesde() {
-    global $pdo;
-
-    $fechaDesde = $_GET['fechaDesde'];
-
-    $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE fechaDesde LIKE ?");
-    $stmt->execute(["%$fechaDesde%"]);
-
-    $anuncios = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    if (!$anuncios) {
-        http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'No se encontraron usuarios']);
-        return;
-    }
-
-    echo json_encode($anuncios);
-}
-
-function filtrarAnunciosPorFechaHasta() {
-    global $pdo;
-
-    $fechaHasta = $_GET['fechaHasta'];
-
-    $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE fechaHasta LIKE ?");
-    $stmt->execute(["%$fechaHasta%"]);
-
-    $anuncios = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    if (!$anuncios) {
-        http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'No se encontraron usuarios']);
-        return;
-    }
-
-    echo json_encode($anuncios);
-}
 
