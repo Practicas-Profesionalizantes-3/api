@@ -8,5 +8,6 @@ CREATE TABLE usuarios (
     carrera VARCHAR (255) NOT NULL,
     anio INT (5) NOT NULL,
     comision VARCHAR (10) NOT NULL,
-    estado INT (11) NOT NULL
+    estado INT (11) NOT NULL,
+    rol varchar (255) NOT NULL
 );
