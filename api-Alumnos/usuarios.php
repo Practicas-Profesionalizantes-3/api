@@ -34,20 +34,41 @@ function altaUsuario() {
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['nombre']) || !isset($data['apellido']) || !isset($data['email']) || !isset($data['password'])) {
+    if (!isset($data['nombre']) || !isset($data['apellido']) || !isset($data['password']) || !isset($data['email']) || !isset($data['dni']) || !isset($data['carrera']) || !isset($data['anio']) || !isset($data['comision']) || !isset($data['estado']) || !isset($data['rol'])) {
         throw new Exception('Todos los campos son obligatorios');
     }
+    
 
     $nombre = $data['nombre'];
     $apellido = $data['apellido'];
+    $password = $data['password'];
     $email = $data['email'];
-    $password = password_hash($data['password'], PASSWORD_DEFAULT);
+    $dni = $data['dni'];
+    $carrera = $data['carrera'];
+    $anio = $data['anio'];
+    $comision = $data['comision'];
+    $estado = $data['estado'];
+    $rol = $data['rol'];
+    
+    $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email like ?");
+    $stmt->execute([$email]);
+    $respuesta = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $stmt = $pdo->prepare("INSERT INTO usuarios (nombre, apellido, email, password) VALUES (?, ?, ?, ?)");
-    $stmt->execute([$nombre, $apellido, $email, $password]);
+    if($respuesta){
+        echo json_encode(['mensaje' => 'Correo existente']);
+    }else{
+        if (preg_match('/^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/', $password)) {
+            $password = password_hash($data['password'], PASSWORD_DEFAULT);
 
-    http_response_code(201); // Creado
-    echo json_encode(['mensaje' => 'Usuario creado correctamente']);
+            $stmt = $pdo->prepare("INSERT INTO usuarios (nombre, apellido, email, password, dni, carrera, anio, comision, estado, rol) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$nombre, $apellido, $email, $password, $dni, $carrera, $anio, $comision, $estado, $rol ]);
+
+         http_response_code(201); // Creado
+         echo json_encode(['mensaje' => 'Usuario creado correctamente']);
+        } else {
+            echo json_encode(['mensaje' => 'Password Invalido']);
+        }  
+    }
 }
 
 function modificarUsuario() {
@@ -140,7 +161,7 @@ function listarUsuarios() {
     } elseif($comision){
         $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE comision LIKE ?");
         $stmt->execute(["%$comision%"]);
-    } elseif($estado){
+    } else{
         $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE estado LIKE ?");
         $stmt->execute(["%$estado%"]);
     }

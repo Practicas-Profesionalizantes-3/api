@@ -18,3 +18,21 @@
 {
     "id": 1
 }
+
+//Alta de notificacion (POST)
+{
+    "tipo_notificacion": "Urgente",
+    "descripcion": "Se le informa que debe presentarse a Departamento de Alumnos"
+}
+
+//Modificar notificacion (PUT)
+{
+    "id":1,
+    "tipo_notificacion": "Urgente",
+    "descripcion": "No hay clases"
+}
+
+//Eliminar notificacion (DELETE)
+{
+    "id": 1
+}
