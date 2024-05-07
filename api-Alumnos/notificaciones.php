@@ -47,7 +47,7 @@ function crearNotificacion() {
 
     http_response_code(201); // Creado
    
-    echo json_encode(['mensaje' => "Notificación Nº ".$pdo->lastInsertId()." creado correctamente."]);
+    echo json_encode(['mensaje' => "Notificación Nº ".$pdo->lastInsertId()." creado correctamente!"]);
 }
 
 function modificarNotificacion() {
@@ -72,7 +72,7 @@ function modificarNotificacion() {
         return;
     }
 
-    echo json_encode(['mensaje' => 'Anuncio modificado correctamente']);
+    echo json_encode(['mensaje' => 'Anuncio modificado correctamente!']);
 }
 
 
@@ -96,7 +96,7 @@ function borrarNotificacion() {
         return;
     }
 
-    echo json_encode(['mensaje' => 'Notificacion eliminado correctamente']);
+    echo json_encode(['mensaje' => 'Notificacion eliminado correctamente!']);
 }
 
 

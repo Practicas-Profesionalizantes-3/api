@@ -34,7 +34,8 @@ function crearAnuncio() {
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['titulo']) || !isset($data['descripcion']) || !isset($data['imagen']) || !isset($data['fechaDesde']) || !isset($data['fechaHasta']) || !isset($data['carrera']) || !isset($data['anio']) || !isset($data['comision']) || !isset($data['estado'])) {
+    if (!isset($data['titulo']) || !isset($data['descripcion']) || !isset($data['imagen']) || !isset($data['fechaDesde']) || 
+    !isset($data['fechaHasta']) || !isset($data['carrera']) || !isset($data['anio']) || !isset($data['comision']) || !isset($data['estado'])) {
         throw new Exception('Todos los campos son obligatorios');
     }
 
@@ -53,7 +54,7 @@ function crearAnuncio() {
 
     http_response_code(201); // Creado
    
-    echo json_encode(['mensaje' => "anuncio Nº ".$pdo->lastInsertId()." creado correctamente perri"]);
+    echo json_encode(['mensaje' => "Anuncio Nº ".$pdo->lastInsertId()." creado correctamente!"]);
 }
 
 function modificarAnuncio() {
@@ -61,7 +62,9 @@ function modificarAnuncio() {
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['id']) || !isset($data['titulo']) || !isset($data['descripcion']) || !isset($data['imagen']) || !isset($data['fechaDesde']) ||  !isset($data['fechaHasta'])) {
+    if (!isset($data['id']) || !isset($data['titulo']) || !isset($data['descripcion']) || !isset($data['imagen']) || 
+    !isset($data['fechaDesde']) ||  !isset($data['fechaHasta']) || !isset($data['carrera']) || !isset($data['anio']) 
+    || !isset($data['comision']) || !isset($data['estado'])) {
         throw new Exception('Todos los campos son obligatorios');
     }
 
@@ -71,9 +74,13 @@ function modificarAnuncio() {
     $imagen = $data['imagen'];
     $fechaDesde = $data['fechaDesde'];
     $fechaHasta = $data['fechaHasta'];
+    $carrera = $data['carrera'];
+    $anio = $data['anio'];
+    $comision = $data['comision'];
+    $estado = $data['estado'];
 
-    $stmt = $pdo->prepare("UPDATE anuncios SET titulo=?, descripcion=?, imagen=?, fechaDesde=?, fechaHasta=? WHERE id=?");
-    $stmt->execute([$titulo, $descripcion, $imagen, $fechaDesde, $fechaHasta, $id]);
+    $stmt = $pdo->prepare("UPDATE anuncios SET titulo=?, descripcion=?, imagen=?, fechaDesde=?, fechaHasta=?, carrera=?, anio=?, comision=?, estado=? WHERE id=?");
+    $stmt->execute([$titulo, $descripcion, $imagen, $fechaDesde, $fechaHasta, $carrera, $anio, $comision, $estado, $id]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
@@ -81,7 +88,7 @@ function modificarAnuncio() {
         return;
     }
 
-    echo json_encode(['mensaje' => 'Anuncio modificado correctamente']);
+    echo json_encode(['mensaje' => 'Anuncio modificado correctamente!']);
 }
 
 
@@ -105,7 +112,7 @@ function borrarAnuncio() {
         return;
     }
 
-    echo json_encode(['mensaje' => 'Anuncio eliminado correctamente']);
+    echo json_encode(['mensaje' => 'Anuncio eliminado correctamente!']);
 }
 
 

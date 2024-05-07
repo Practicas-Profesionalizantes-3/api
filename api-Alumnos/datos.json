@@ -1,3 +1,38 @@
+//Crear Anuncio (POST)
+{
+    
+    "titulo"  :"titulo",
+    "descripcion" : "descripcion",
+    "imagen" : "imagen",
+    "fechaDesde" : "fechaDesde",
+    "fechaHasta" : "fechaHasta",
+    "carrera" : "carrera",
+    "anio" : "anio",
+    "comision" : "comision",
+    "estado" : "estado"
+}
+
+//Modificar Anuncio (PUT)
+{
+    "id": 1,
+    "titulo"  :"titulo",
+    "descripcion" : "descripcion",
+    "imagen" : "imagen",
+    "fechaDesde" : "fechaDesde",
+    "fechaHasta" : "fechaHasta",
+    "carrera" : "carrera",
+    "anio" : "anio",
+    "comision" : "comision",
+    "estado" : "estado"
+}
+
+//Eliminar Anuncio
+{
+    "id" : 1,
+}
+
+----------------------------------
+
 //Alta de usuario (POST)
 {
     "nombre": "Juan",
@@ -19,6 +54,8 @@
     "id": 1
 }
 
+--------------------------------------
+
 //Alta de notificacion (POST)
 {
     "tipo_notificacion": "Urgente",
@@ -33,6 +70,28 @@
 }
 
 //Eliminar notificacion (DELETE)
+{
+    "id": 1
+}
+
+---------------------------------
+
+
+//Alta de Tramite (POST)
+{
+    "tipo_tramite" : "tipo_tramite",
+    "descripcion" : "descripcion",
+    "estado" : "estado"
+}
+//Modificar Tramite (PUT)
+{
+    "id": 1,
+    "tipo_tramite" : "tipo_tramite",
+    "descripcion" : "descripcion",
+    "estado" : "estado"
+}
+
+//Eliminar Tramite (DELETE)
 {
     "id": 1
 }

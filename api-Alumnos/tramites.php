@@ -47,7 +47,7 @@ function crearTramites() {
 
     http_response_code(201); // Creado
    
-    echo json_encode(['mensaje' => "tramite Nº ".$pdo->lastInsertId()." creado correctamente"]);
+    echo json_encode(['mensaje' => "tramite Nº ".$pdo->lastInsertId()." Creado Correctamente!!"]);
 }
 
 function modificarTramites() {
@@ -73,7 +73,7 @@ function modificarTramites() {
         return;
     }
 
-    echo json_encode(['mensaje' => 'Tramite modificado correctamente']);
+    echo json_encode(['mensaje' => 'Tramite modificado Con Exito!']);
 }
 
 
@@ -97,7 +97,7 @@ function borrarTramites() {
         return;
     }
 
-    echo json_encode(['mensaje' => 'Tramite eliminado correctamente']);
+    echo json_encode(['mensaje' => 'Tramite eliminado Con Exito!']);
 }
 
 

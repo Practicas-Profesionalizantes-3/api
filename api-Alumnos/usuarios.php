@@ -64,9 +64,9 @@ function altaUsuario() {
             $stmt->execute([$nombre, $apellido, $email, $password, $dni, $carrera, $anio, $comision, $estado, $rol ]);
 
          http_response_code(201); // Creado
-         echo json_encode(['mensaje' => 'Usuario creado correctamente']);
+         echo json_encode(['mensaje' => 'Usuario creado correctamente!']);
         } else {
-            echo json_encode(['mensaje' => 'Password Invalido']);
+            echo json_encode(['mensaje' => 'El password debe tenes una letra mayuscula y al meos un numero!']);
         }  
     }
 }
@@ -86,11 +86,11 @@ function modificarUsuario() {
     $email = $data['email'];
     $dni = $data['dni'];
     $carrera = $data['carrera'];
-    $year = $data['anio'];
+    $anio = $data['anio'];
     $comision = $data['comision'];
 
     $stmt = $pdo->prepare("UPDATE usuarios SET nombre=?, apellido=?, email=?, dni=?, carrera=?, anio=?, comision=? WHERE id=?");
-    $stmt->execute([$nombre, $apellido, $email, $dni, $carrera, $year, $comision, $id]);
+    $stmt->execute([$nombre, $apellido, $email, $dni, $carrera, $anio, $comision, $id]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
@@ -98,7 +98,7 @@ function modificarUsuario() {
         return;
     }
 
-    echo json_encode(['mensaje' => 'Usuario modificado correctamente']);
+    echo json_encode(['mensaje' => 'Usuario modificado correctamente!']);
 }
 
 
