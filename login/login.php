@@ -1,12 +1,20 @@
 <?php
 require 'config.php';
 
-header('Content-Type: application/json');
+header('Content-Type: application/json'); 
 
+header('Access-Control-Allow-Origin: *');
+
+header('Access-Control-Allow-Methods: GET, POST');
+
+header("Access-Control-Allow-Headers: X-Requested-With");
 try {
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'GET':
             listarUsuarios();
+            break;
+        case 'POST':
+            iniciarSesion();
             break;
         case 'DELETE':
             bajaUsuario();
@@ -23,7 +31,27 @@ try {
     echo json_encode(['error' => $e->getMessage()]);
 }
 
+function iniciarSesion(){
+    global $pdo;
+    $data = json_decode(file_get_contents('php://input'), true);
 
+    if (!isset($data['user']) || !isset($data['password'])) {
+        echo json_encode("Usuario o contraseña no ingresados");
+        return;
+    }
+
+    $email = $data['user'];
+    $password = $data['password'];
+    $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email=? AND password=?");
+    $stmt->execute([$email, $password]);
+    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($usuario) {
+        echo json_encode(["codigo" => 200, "error" => null, "success" => true]);
+    } else {
+        echo json_encode(["success" => false, 'error' => "Usuario o contraseña incorrectos", 'codigo' => 401]);
+    }
+}
 
 function bajaUsuario() {
     global $pdo;
