@@ -34,22 +34,25 @@ function altaUsuario() {
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['nombre']) || !isset($data['apellido']) || !isset($data['password']) || !isset($data['email']) || !isset($data['dni']) || !isset($data['carrera']) || !isset($data['anio']) || !isset($data['comision']) || !isset($data['estado']) || !isset($data['firma_digital']) || !isset($data['id_tipo_usuario'])) {
+    if (!isset($data['nombre']) || !isset($data['apellido']) || !isset($data['password']) || 
+    !isset($data['email']) || !isset($data['id_documento_tipo']) || !isset($data['id_usuario_estado']) || !isset($data['numero_documento']) 
+    || !isset($data['id_carrera']) || !isset($data['anio']) || !isset($data['comision']) || !isset($data['id_usuario_tipo'])) {
         throw new Exception('Todos los campos son obligatorios');
     }
     
-
+  
     $nombre = $data['nombre'];
     $apellido = $data['apellido'];
     $password = $data['password'];
     $email = $data['email'];
-    $dni = $data['dni'];
-    $carrera = $data['carrera'];
+    $id_documento_tipo = $data['id_documento_tipo'];
+    $id_usuario_estado = $data['id_usuario_estado'];
+    $numero_documento = $data['numero_documento'];
+    $id_carrera = $data['id_carrera'];
     $anio = $data['anio'];
     $comision = $data['comision'];
-    $estado = $data['estado'];
-    $firma_digital = $data['firma_digital'];
-    $id_tipo_usuario = $data['id_tipo_usuario'];
+    $id_usuario_tipo = $data['id_usuario_tipo'];
+    
 
     
     $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email like ?");
@@ -62,17 +65,20 @@ function altaUsuario() {
         if (preg_match('/^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/', $password)) {
             $password = password_hash($data['password'], PASSWORD_DEFAULT);
 
-            $stmt = $pdo->prepare("INSERT INTO usuarios (nombre, apellido, email, password, dni, carrera, anio, comision, estado, firma_digital) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$nombre, $apellido, $email, $password, $dni, $carrera, $anio, $comision, $estado, $firma_digital ]);
+            $stmt = $pdo->prepare("INSERT INTO usuarios (nombre, apellido, password, email, id_documento_tipo, id_usuario_estado, numero_documento) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$nombre, $apellido, $password, $email, $id_documento_tipo, $id_usuario_estado, $numero_documento]);
 
-            $id_user = $pdo->lastInsertId();
+            $id_usuario = $pdo->lastInsertId();
             $stmt = $pdo->prepare("INSERT INTO usuario_roles (id_usuario, id_usuario_tipo) VALUES (?, ?)");
-            $stmt->execute([$id_user, $id_tipo_usuario]);
+            $stmt->execute([$id_usuario, $id_usuario_tipo]);
+            
+            $stmt = $pdo->prepare("INSERT INTO usuario_carreras (id_usuario, id_carrera, anio, comision) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$id_usuario, $id_carrera, $anio, $comision]);
 
             http_response_code(201); // Creado
             echo json_encode(['mensaje' => 'Usuario creado correctamente!']);
         } else {
-            echo json_encode(['mensaje' => 'El password debe tenes una letra mayuscula y al meos un numero!']);
+            echo json_encode(['mensaje' => 'El password debe tenes una letra mayuscula y al menos un numero!']);
         }  
     }
 }
@@ -82,30 +88,38 @@ function modificarUsuario() {
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['id_usuario']) || !isset($data['nombre']) || !isset($data['apellido']) || !isset($data['email']) || !isset($data['dni']) ||  !isset($data['carrera']) || !isset($data['anio']) || !isset($data['comision'])) {
+    if (!isset($data['id_usuario']) || !isset($data['nombre']) || !isset($data['apellido']) ||  
+    !isset($data['email']) || !isset($data['id_documento_tipo']) || !isset($data['id_usuario_estado']) || !isset($data['numero_documento']) 
+    || !isset($data['id_carrera']) || !isset($data['anio']) || !isset($data['comision']) || !isset($data['id_usuario_tipo'])) {
         throw new Exception('Todos los campos son obligatorios');
     }
 
-    $id = $data['id_usuario'];
+    $id_usuario = $data['id_usuario'];
     $nombre = $data['nombre'];
     $apellido = $data['apellido'];
     $email = $data['email'];
-    $dni = $data['dni'];
-    $carrera = $data['carrera'];
+    $id_documento_tipo = $data['id_documento_tipo'];
+    $id_usuario_estado = $data['id_usuario_estado'];
+    $numero_documento = $data['numero_documento'];
+    $id_carrera = $data['id_carrera'];
     $anio = $data['anio'];
     $comision = $data['comision'];
-    $usuario_tipo = $data['id_usuario_tipo'];
+    $id_usuario_tipo = $data['id_usuario_tipo'];
 
-    $stmt = $pdo->prepare("UPDATE usuarios SET nombre=?, apellido=?, dni=?, email=?, carrera=?, anio=?, comision=? WHERE id_usuario=?");
-    $stmt->execute([$nombre, $apellido, $dni, $email, $carrera, $anio, $comision, $id]);
 
-    $stmt = $pdo->prepare("UPDATE usuario_roles SET id_usuario_tipo = ? WHERE id_usuario=?");
-    $stmt->execute([$usuario_tipo, $id]);
+    $stmt = $pdo->prepare("UPDATE usuarios SET nombre=?, apellido=?, email=?, id_documento_tipo=?, id_usuario_estado=?, numero_documento=? WHERE id_usuario=?");
+            $stmt->execute([$nombre, $apellido, $email, $id_documento_tipo, $id_usuario_estado, $numero_documento, $id_usuario]);
+
+    $stmt = $pdo->prepare("UPDATE usuario_roles SET id_usuario=?, id_usuario_tipo=? WHERE id_usuario=?");
+            $stmt->execute([$id_usuario, $id_usuario_tipo, $id_usuario]);
+            
+    $stmt = $pdo->prepare("UPDATE usuario_carreras SET id_usuario=?, id_carrera=?, anio=?, comision=? WHERE id_usuario=?");
+            $stmt->execute([$id_usuario, $id_carrera, $anio, $comision, $id_usuario]);
 
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'Usuario no encontrado']);
+        echo json_encode(['error' => 'Usuario modificado correctamente!']);
         return;
     }
 
@@ -122,10 +136,9 @@ function bajaUsuario() {
         throw new Exception('Todos los campos son obligatorios');
     }
 
-    $id_usuario = $data['id_usuario'];
-       
+    $id_usuario = isset($_GET['id_usuario'])? (int)$_GET['id_usuario'] : null;
 
-    $stmt = $pdo->prepare("UPDATE usuarios SET estado='baja' WHERE id_usuario=?");
+    $stmt = $pdo->prepare("UPDATE usuarios SET id_usuario_estado = '3' WHERE id_usuario=?");
     $stmt->execute([$id_usuario]);
 
     if ($stmt->rowCount() === 0) {
@@ -142,41 +155,141 @@ function bajaUsuario() {
 function listarUsuarios() {
     global $pdo;
 
-    $apellido = isset($_GET['apellido'])? $_GET['apellido'] : null;
     $id_usuario = isset($_GET['id_usuario'])? (int)$_GET['id_usuario'] : null;
-    $dni = isset($_GET['dni'])? (int)$_GET['dni'] : null;
+    $nombre = isset($_GET['nombre'])? $_GET['nombre'] : null;
+    $apellido = isset($_GET['apellido'])? $_GET['apellido'] : null;
     $email = isset($_GET['email'])? $_GET['email'] : null;
-    $carrera = isset($_GET['carrera'])? $_GET['carrera'] : null;
-    $anio = isset($_GET['anio'])? (int)$_GET['anio'] : null;
-    $comision = isset($_GET['comision'])? $_GET['comision'] : null;
-    $estado = isset($_GET['estado'])? $_GET['estado'] : null;
+    $id_documento_tipo = isset($_GET['id_documento_tipo'])? $_GET['id_documento_tipo'] : null;
+    $id_usuario_estado = isset($_GET['id_usuario_estado'])? (int)$_GET['id_usuario_estado'] : null;
+    $numero_documento = isset($_GET['numero_documento'])? $_GET['numero_documento'] : null;
+    
 
     if ($id_usuario) {
-        $stmt = $pdo->prepare("SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.dni, u.carrera, u.anio, u.comision, u.estado, ut.permiso_nombre AS tipo_usuario FROM usuarios AS u, usuario_tipos AS ut, usuario_roles AS ur WHERE u.id_usuario = ? and u.id_usuario = ur.id_usuario and ur.id_usuario_tipo = ut.id_usuario_tipo");
+        $stmt = $pdo->prepare("SELECT 
+        u.id_usuario, 
+        u.nombre, 
+        u.apellido, 
+        u.email, 
+        dt.descripcion AS documento_tipo, 
+        ue.descripcion AS usuario_estado, 
+        u.numero_documento 
+      FROM 
+        usuarios AS u 
+        INNER JOIN documento_tipos AS dt ON u.id_documento_tipo = dt.id_documento_tipo 
+        INNER JOIN usuario_estados AS ue ON u.id_usuario_estado = ue.id_usuario_estado
+      WHERE 
+        u.id_usuario = ?");
         $stmt->execute([$id_usuario]);
-    } elseif($apellido) {
-        $stmt = $pdo->prepare("SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.dni, u.carrera, u.anio, u.comision, u.estado, ut.permiso_nombre AS tipo_usuario FROM usuarios AS u, usuario_tipos AS ut, usuario_roles AS ur WHERE apellido LIKE ? and u.id_usuario = ur.id_usuario and ur.id_usuario_tipo = ut.id_usuario_tipo");
-        $stmt->execute(["%$apellido%"]);
-    } elseif($dni){
-        $stmt = $pdo->prepare("SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.dni, u.carrera, u.anio, u.comision, u.estado, ut.permiso_nombre AS tipo_usuario FROM usuarios AS u, usuario_tipos AS ut, usuario_roles AS ur WHERE dni = ? and u.id_usuario = ur.id_usuario and ur.id_usuario_tipo = ut.id_usuario_tipo");
-        $stmt->execute([$dni]);
+    } elseif($nombre) {
+        $stmt = $pdo->prepare("SELECT 
+        u.id_usuario, 
+        LOWER(u.nombre) AS nombre, 
+        LOWER(u.apellido) AS apellido, 
+        LOWER(u.email) AS email, 
+        LOWER(dt.descripcion) AS documento_tipo, 
+        LOWER(ue.descripcion) AS usuario_estado, 
+        u.numero_documento 
+      FROM 
+        usuarios AS u 
+        INNER JOIN documento_tipos AS dt ON u.id_documento_tipo = dt.id_documento_tipo 
+        INNER JOIN usuario_estados AS ue ON u.id_usuario_estado = ue.id_usuario_estado
+      WHERE 
+        u.nombre like LOWER(?)");
+        $stmt->execute(["%$nombre%"]);
+    } elseif($apellido){
+        $stmt = $pdo->prepare("SELECT 
+        u.id_usuario, 
+        LOWER(u.nombre) AS nombre, 
+        LOWER(u.apellido) AS apellido, 
+        LOWER(u.email) AS email, 
+        LOWER(dt.descripcion) AS documento_tipo, 
+        LOWER(ue.descripcion) AS usuario_estado, 
+        u.numero_documento 
+      FROM 
+        usuarios AS u 
+        INNER JOIN documento_tipos AS dt ON u.id_documento_tipo = dt.id_documento_tipo 
+        INNER JOIN usuario_estados AS ue ON u.id_usuario_estado = ue.id_usuario_estado
+      WHERE 
+        u.apellido like LOWER(?)");
+        $stmt->execute([$apellido]);
     } elseif($email){
-        $stmt = $pdo->prepare("SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.dni, u.carrera, u.anio, u.comision, u.estado, ut.permiso_nombre AS tipo_usuario FROM usuarios AS u, usuario_tipos AS ut, usuario_roles AS ur WHERE email LIKE ? and u.id_usuario = ur.id_usuario and ur.id_usuario_tipo = ut.id_usuario_tipo");
+        $stmt = $pdo->prepare("SELECT 
+        u.id_usuario, 
+        LOWER(u.nombre) AS nombre, 
+        LOWER(u.apellido) AS apellido, 
+        LOWER(u.email) AS email, 
+        LOWER(dt.descripcion) AS documento_tipo, 
+        LOWER(ue.descripcion) AS usuario_estado, 
+        u.numero_documento 
+      FROM 
+        usuarios AS u 
+        INNER JOIN documento_tipos AS dt ON u.id_documento_tipo = dt.id_documento_tipo 
+        INNER JOIN usuario_estados AS ue ON u.id_usuario_estado = ue.id_usuario_estado
+      WHERE 
+        u.email like LOWER(?)");
         $stmt->execute(["%$email%"]);
-    } elseif($carrera){
-        $stmt = $pdo->prepare("SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.dni, u.carrera, u.anio, u.comision, u.estado, ut.permiso_nombre AS tipo_usuario FROM usuarios AS u, usuario_tipos AS ut, usuario_roles AS ur WHERE carrera LIKE ? and u.id_usuario = ur.id_usuario and ur.id_usuario_tipo = ut.id_usuario_tipo");
-        $stmt->execute(["%$carrera%"]);
-    } elseif($anio){
-        $stmt = $pdo->prepare("SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.dni, u.carrera, u.anio, u.comision, u.estado, ut.permiso_nombre AS tipo_usuario FROM usuarios AS u, usuario_tipos AS ut, usuario_roles AS ur WHERE anio = ? and u.id_usuario = ur.id_usuario and ur.id_usuario_tipo = ut.id_usuario_tipo");
-        $stmt->execute([$anio]);
-    } elseif($comision){
-        $stmt = $pdo->prepare("SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.dni, u.carrera, u.anio, u.comision, u.estado, ut.permiso_nombre AS tipo_usuario FROM usuarios AS u, usuario_tipos AS ut, usuario_roles AS ur WHERE comision LIKE ? and u.id_usuario = ur.id_usuario and ur.id_usuario_tipo = ut.id_usuario_tipo");
-        $stmt->execute(["%$comision%"]);
-    } elseif($estado){
-        $stmt = $pdo->prepare("SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.dni, u.carrera, u.anio, u.comision, u.estado, ut.permiso_nombre AS tipo_usuario FROM usuarios AS u, usuario_tipos AS ut, usuario_roles AS ur WHERE estado LIKE ? and u.id_usuario = ur.id_usuario and ur.id_usuario_tipo = ut.id_usuario_tipo");
-        $stmt->execute(["%$estado%"]);
+    } elseif($id_documento_tipo){
+        $stmt = $pdo->prepare("SELECT 
+        u.id_usuario, 
+        LOWER(u.nombre) AS nombre, 
+        LOWER(u.apellido) AS apellido, 
+        LOWER(u.email) AS email, 
+        LOWER(dt.descripcion) AS documento_tipo, 
+        LOWER(ue.descripcion) AS usuario_estado, 
+        u.numero_documento 
+      FROM 
+        usuarios AS u 
+        INNER JOIN documento_tipos AS dt ON u.id_documento_tipo = dt.id_documento_tipo 
+        INNER JOIN usuario_estados AS ue ON u.id_usuario_estado = ue.id_usuario_estado
+      WHERE 
+        dt.descripcion like LOWER(?)");
+        $stmt->execute([$id_documento_tipo]);
+    } elseif($id_usuario_estado){
+        $stmt = $pdo->prepare("SELECT 
+        u.id_usuario, 
+        LOWER(u.nombre) AS nombre, 
+        LOWER(u.apellido) AS apellido, 
+        LOWER(u.email) AS email, 
+        LOWER(dt.descripcion) AS documento_tipo, 
+        LOWER(ue.descripcion) AS usuario_estado, 
+        u.numero_documento 
+      FROM 
+        usuarios AS u 
+        INNER JOIN documento_tipos AS dt ON u.id_documento_tipo = dt.id_documento_tipo 
+        INNER JOIN usuario_estados AS ue ON u.id_usuario_estado = ue.id_usuario_estado
+      WHERE 
+        u.id_usuario_estado like ?");
+        $stmt->execute([$id_usuario_estado]);
+    } elseif($numero_documento){
+        $stmt = $pdo->prepare("SELECT 
+        u.id_usuario, 
+        LOWER(u.nombre) AS nombre, 
+        LOWER(u.apellido) AS apellido, 
+        LOWER(u.email) AS email, 
+        LOWER(dt.descripcion) AS documento_tipo, 
+        LOWER(ue.descripcion) AS usuario_estado, 
+        u.numero_documento 
+      FROM 
+        usuarios AS u 
+        INNER JOIN documento_tipos AS dt ON u.id_documento_tipo = dt.id_documento_tipo 
+        INNER JOIN usuario_estados AS ue ON u.id_usuario_estado = ue.id_usuario_estado
+      WHERE 
+      u.numero_documento like ?");
+        $stmt->execute(["%$numero_documento%"]);
     }else{
-        $stmt = $pdo->prepare("SELECT u.id_usuario, u.nombre, u.apellido, u.email, u.dni, u.carrera, u.anio, u.comision, u.estado, ut.permiso_nombre AS tipo_usuario FROM usuarios AS u, usuario_tipos AS ut, usuario_roles AS ur WHERE u.id_usuario = ur.id_usuario and ur.id_usuario_tipo = ut.id_usuario_tipo;");
+        $stmt = $pdo->prepare("SELECT 
+        u.id_usuario, 
+        u.nombre, 
+        u.apellido, 
+        u.email, 
+        dt.descripcion AS documento_tipo, 
+        ue.descripcion AS usuario_estado, 
+        u.numero_documento 
+      FROM 
+        usuarios AS u 
+        INNER JOIN documento_tipos AS dt ON u.id_documento_tipo = dt.id_documento_tipo 
+        INNER JOIN usuario_estados AS ue ON u.id_usuario_estado = ue.id_usuario_estado
+      ");
         $stmt->execute();
     }
 
