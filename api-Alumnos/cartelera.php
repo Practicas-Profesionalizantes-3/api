@@ -6,7 +6,7 @@ header('Content-Type: application/json');
 try {
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'GET':
-                listarAnuncios();
+                listarAvisos();
             break;
         case 'POST':
             crearAnuncio();
@@ -15,7 +15,7 @@ try {
                 modificarAnuncio();
             break;
         case 'DELETE':
-            borrarAnuncio();
+            borrarAviso();
             break;
         default:
             http_response_code(405); // Método no permitido
@@ -62,25 +62,26 @@ function modificarAnuncio() {
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['id']) || !isset($data['titulo']) || !isset($data['descripcion']) || !isset($data['imagen']) || 
-    !isset($data['fechaDesde']) ||  !isset($data['fechaHasta']) || !isset($data['carrera']) || !isset($data['anio']) 
-    || !isset($data['comision']) || !isset($data['estado'])) {
+    if (!isset($data['id_aviso']) || !isset($data['id_aviso_tipo']) || !isset($data['id_usuario']) || !isset($data['titulo']) || !isset($data['descripcion']) 
+    || !isset($data['fecha_publicacion']) || !isset($data['fecha_vencimiento']) || !isset($data['adjunto']) || !isset($data['fijado'])) {
         throw new Exception('Todos los campos son obligatorios');
     }
 
-    $id = $data['id'];
-    $titulo = $data['titulo'];
-    $descripcion = $data['descripcion'];
-    $imagen = $data['imagen'];
-    $fechaDesde = $data['fechaDesde'];
-    $fechaHasta = $data['fechaHasta'];
-    $carrera = $data['carrera'];
-    $anio = $data['anio'];
-    $comision = $data['comision'];
-    $estado = $data['estado'];
 
-    $stmt = $pdo->prepare("UPDATE anuncios SET titulo=?, descripcion=?, imagen=?, fechaDesde=?, fechaHasta=?, carrera=?, anio=?, comision=?, estado=? WHERE id=?");
-    $stmt->execute([$titulo, $descripcion, $imagen, $fechaDesde, $fechaHasta, $carrera, $anio, $comision, $estado, $id]);
+    $id_aviso = isset($_GET['id_aviso'])? (int)$_GET['id_aviso'] : null;
+    $id_aviso_tipo = isset($_GET['id_aviso_tipo'])? (int)$_GET['id_aviso_tipo'] : null;
+    $id_usuario = isset($_GET['id_usuario'])? (int)$_GET['id_usuario'] : null;
+    $titulo = isset($_GET['titulo'])? $_GET['titulo'] : null;
+    $descripcion = isset($_GET['descripcion'])? $_GET['descripcion'] : null;
+    $fecha_publicacion = isset($_GET['fecha_publicacion'])? (int)$_GET['fecha_publicacion'] : null;
+    $fecha_vencimiento = isset($_GET['fecha_vencimiento'])? (int)$_GET['fecha_vencimiento'] : null;
+    $adjunto = isset($_GET['adjunto'])? $_GET['adjunto'] : null;
+    $fijado = isset($_GET['fijado'])? $_GET['fijado'] : null;
+    
+
+
+    $stmt = $pdo->prepare("UPDATE avisos SET id_aviso_tipo=?, id_usuario=?, titulo=?, descripcion=?, fecha_publicacion=?, fecha_vencimiento=?, adjunto=?, fijado=?  WHERE id_aviso=?");
+    $stmt->execute([ $id_aviso_tipo, $id_usuario, $titulo, $descripcion, $fecha_publicacion, $fecha_vencimiento, $adjunto, $fijado, $id_aviso]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
@@ -92,81 +93,87 @@ function modificarAnuncio() {
 }
 
 
-function borrarAnuncio() {
+function borrarAviso() {
     global $pdo;
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['id'])){
+    if (!isset($data['id_aviso'])){
         throw new Exception('Todos los campos son obligatorios');
     }
 
-    $id = $data['id'];
+    $id_aviso = isset($_GET['id_aviso'])? (int)$_GET['id_aviso'] : null;
 
-    $stmt = $pdo->prepare("DELETE FROM anuncios WHERE id=?");
-    $stmt->execute([$id]);
+    $stmt = $pdo->prepare("DELETE FROM avisos WHERE id_aviso=?");
+    $stmt->execute([$id_aviso]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'Anuncio no encontrado']);
+        echo json_encode(['error' => 'Aviso no encontrado']);
         return;
     }
 
-    echo json_encode(['mensaje' => 'Anuncio eliminado correctamente!']);
+    echo json_encode(['mensaje' => 'Aviso modificado correctamente']);
 }
 
 
-function listarAnuncios() {
+function listarAvisos() {
     global $pdo;
 
+    $id_aviso_tipo = isset($_GET['id_aviso_tipo'])? (int)$_GET['id_aviso_tipo'] : null;
     $titulo = isset($_GET['titulo'])? $_GET['titulo'] : null;
-    $id = isset($_GET['id'])? (int)$_GET['id'] : null;
     $descripcion = isset($_GET['descripcion'])? $_GET['descripcion'] : null;
-    $carrera = isset($_GET['carrera'])? $_GET['carrera'] : null;
-    $anio = isset($_GET['anio'])? (int)$_GET['anio'] : null;
-    $comision = isset($_GET['comision'])? $_GET['comision'] : null;
-    $estado = isset($_GET['estado'])? $_GET['estado'] : null;
-    $fechaDesde = isset($_GET['fechaDesde'])? $_GET['fechaDesde'] : null;
-    $fechaHasta = isset($_GET['fechaHasta'])? $_GET['fechaHasta'] : null;
+   // $fecha_publicacion = isset($_GET['fecha_publicacion'])? (int)$_GET['fecha_publicacion'] : null;
+    $adjunto = isset($_GET['adjunto'])? $_GET['adjunto'] : null;
+    $fijado = isset($_GET['fijado'])? $_GET['fijado'] : null;
 
-    if ($id) {
-        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE id =?");
-        $stmt->execute([$id]);
-    } elseif($titulo) {
-        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE titulo LIKE?");
-        $stmt->execute(["%$titulo%"]);
-    } elseif($descripcion){
-        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE descripcion LIKE ?");
-        $stmt->execute(["%$descripcion%"]);
-    } elseif($carrera){
-        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE carrera LIKE ?");
-        $stmt->execute(["%$carrera%"]);
-    } elseif($anio){
-        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE anio=?");
-        $stmt->execute([$anio]);
-    } elseif($comision){
-        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE comision LIKE ?");
-        $stmt->execute(["%$comision%"]);
-    } elseif($estado){
-        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE estado LIKE ?");
-        $stmt->execute(["%$estado%"]);
-    }elseif($fechaDesde){
-        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE fechaDesde LIKE ?");
-        $stmt->execute(["%$fechaDesde%"]);
-    }elseif($fechaHasta){
-        $stmt = $pdo->prepare("SELECT * FROM anuncios WHERE fechaHasta LIKE ?");
-        $stmt->execute(["%$fechaHasta%"]);
+$sql="SELECT 
+a.id_aviso, 
+a.titulo, 
+a.descripcion, 
+a.fecha_publicacion, 
+a.fecha_vencimiento, 
+a.adjunto, 
+a.fijado, 
+at.descripcion AS aviso_tipo, 
+u.nombre AS usuario 
+FROM 
+avisos AS a 
+INNER JOIN aviso_tipo AS at ON a.id_aviso_tipo = at.id_aviso_tipo 
+INNER JOIN usuarios AS u ON a.id_usuario = u.id_usuario 
+WHERE 
+1 =1";
+  
+    if ($id_aviso_tipo!=null) {
+       $sql .=" AND a.id_aviso_tipo=$id_aviso_tipo";
+    } 
+    if ($titulo!=null) {
+        $sql .=" AND LOWER(a.titulo) like LOWER('%$titulo%')";
     }
-
+    if ($descripcion!=null) {
+        $sql .=" AND LOWER(a.descripcion) like LOWER('%$descripcion%')";
+    }
+    if ($adjunto=='1') {
+        $sql .=" AND a.adjunto <>''";
+    }
+    if ($adjunto=='0') {
+        $sql .=" AND a.adjunto =''";
+    }
+    if ($fijado=='1') {
+        $sql .=" AND a.fijado <>''";  
+    }
+    if ($fijado=='0') {
+        $sql .=" AND a.fijado =''";    
+    }
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
     $anuncios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if (!$anuncios) {
         http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'No se encontraron anuncios$anuncios']);
+        echo json_encode(['error' => 'No se encontraron anuncios']);
         return;
     }
 
     echo json_encode($anuncios);
 }
-
-
