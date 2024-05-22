@@ -180,7 +180,7 @@ CREATE TABLE `tramite_movimientos` (
   `fecha_movimiento` date DEFAULT NULL,
   `id_usuario` int(11) NOT NULL,
   `observacion` varchar(255) NOT NULL,
-  `id_estado` int(11) NOT NULL
+  `id_estado_tramite` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
