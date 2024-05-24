@@ -81,17 +81,15 @@ function modificarAviso()
     }
 
 
-    $id_aviso = isset($_GET['id_aviso']) ? (int)$_GET['id_aviso'] : null;
-    $id_aviso_tipo = isset($_GET['id_aviso_tipo']) ? (int)$_GET['id_aviso_tipo'] : null;
-    $id_usuario = isset($_GET['id_usuario']) ? (int)$_GET['id_usuario'] : null;
-    $titulo = isset($_GET['titulo']) ? $_GET['titulo'] : null;
-    $descripcion = isset($_GET['descripcion']) ? $_GET['descripcion'] : null;
-    $fecha_publicacion = isset($_GET['fecha_publicacion']) ? $_GET['fecha_publicacion'] : null;
-    $fecha_vencimiento = isset($_GET['fecha_vencimiento']) ? $_GET['fecha_vencimiento'] : null;
-    $adjunto = isset($_GET['adjunto']) ? $_GET['adjunto'] : null;
-    $fijado = isset($_GET['fijado']) ? $_GET['fijado'] : null;
-
-
+    $id_aviso = $data['id_aviso'];
+    $id_aviso_tipo = $data['id_aviso_tipo'];
+    $id_usuario = $data['id_usuario'];
+    $titulo = $data['titulo'];
+    $descripcion = $data['descripcion'];
+    $fecha_publicacion = $data['fecha_publicacion'];
+    $fecha_vencimiento = $data['fecha_vencimiento'];
+    $adjunto = $data['adjunto'];
+    $fijado = $data['fijado'];
 
     $stmt = $pdo->prepare("UPDATE avisos SET id_aviso_tipo=?, id_usuario=?, titulo=?, descripcion=?, fecha_publicacion=?, fecha_vencimiento=?, adjunto=?, fijado=? WHERE id_aviso=?");
     $stmt->execute([$id_aviso_tipo, $id_usuario, $titulo, $descripcion, $fecha_publicacion, $fecha_vencimiento, $adjunto, $fijado, $id_aviso]);
