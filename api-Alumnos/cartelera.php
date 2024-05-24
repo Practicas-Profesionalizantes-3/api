@@ -36,29 +36,29 @@ function crearAviso()
     $data = json_decode(file_get_contents('php://input'), true);
 
     if (
-        !isset($data['id_aviso']) || !isset($data['id_aviso_tipo']) || !isset($data['id_usuario']) || !isset($data['titulo'])
+        !isset($data['id_aviso_tipo']) || !isset($data['id_usuario']) || !isset($data['titulo'])
         || !isset($data['descripcion']) || !isset($data['fecha_publicacion']) || !isset($data['fecha_vencimiento'])
-        || !isset($data['adjunto']) || !isset($date['fijado'])
+        || !isset($data['adjunto']) || !isset($data['fijado']) || !isset($data['id_aviso_estado'])
     ) {
         throw new Exception('Todos los campos son obligatorios');
     }
 
-    $id_aviso = $data['id_aviso'];
     $id_aviso_tipo = $data['id_aviso_tipo'];
     $id_usuario = $data['id_usuario'];
     $titulo = $data['titulo'];
     $descripcion = $data['descripcion'];
     $fecha_publicacion = $data['fecha_publicacion'];
-    $fecha_vencimiento = $data['$fecha_vencimiento'];
+    $fecha_vencimiento = $data['fecha_vencimiento'];
     $adjunto = $data['adjunto'];
     $fijado = $data['fijado'];
+    $id_aviso_estado = $data['id_aviso_estado'];
 
 
-    $stmt = $pdo->prepare("INSERT INTO `avisos` (id_aviso, id_aviso_tipo, id_usuario, titulo, descripcion, 
-    fecha_publicacion, fecha_vencimiento, adjunto, fijado`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO `avisos` (id_aviso_tipo, id_usuario, titulo, descripcion, 
+    fecha_publicacion, fecha_vencimiento, adjunto, fijado, id_aviso_estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $stmt->execute([
-        $id_aviso, $id_aviso_tipo, $id_usuario, $titulo, $descripcion, $fecha_publicacion,
-        $fecha_vencimiento, $adjunto, $fijado
+        $id_aviso_tipo, $id_usuario, $titulo, $descripcion, $fecha_publicacion,
+        $fecha_vencimiento, $adjunto, $fijado, $id_aviso_estado
     ]);
 
     http_response_code(201); // Creado
@@ -74,7 +74,7 @@ function modificarAviso()
 
     if (
         !isset($data['id_aviso']) || !isset($data['id_aviso_tipo']) || !isset($data['id_usuario'])
-        || !isset($data['titulo']) || !isset($data['$descripcion']) || !isset($data['fecha_publicacion'])
+        || !isset($data['titulo']) || !isset($data['descripcion']) || !isset($data['fecha_publicacion'])
         || !isset($data['fecha_vencimiento']) || !isset($data['adjunto']) || !isset($data['fijado'])
     ) {
         throw new Exception('Todos los campos son obligatorios');
@@ -86,8 +86,8 @@ function modificarAviso()
     $id_usuario = isset($_GET['id_usuario']) ? (int)$_GET['id_usuario'] : null;
     $titulo = isset($_GET['titulo']) ? $_GET['titulo'] : null;
     $descripcion = isset($_GET['descripcion']) ? $_GET['descripcion'] : null;
-    $fecha_publicacion = isset($_GET['fecha_publicacion']) ? (int)$_GET['fecha_publicacion'] : null;
-    $fecha_vencimiento = isset($_GET['fecha_vencimiento']) ? (int)$_GET['fecha_vencimiento'] : null;
+    $fecha_publicacion = isset($_GET['fecha_publicacion']) ? $_GET['fecha_publicacion'] : null;
+    $fecha_vencimiento = isset($_GET['fecha_vencimiento']) ? $_GET['fecha_vencimiento'] : null;
     $adjunto = isset($_GET['adjunto']) ? $_GET['adjunto'] : null;
     $fijado = isset($_GET['fijado']) ? $_GET['fijado'] : null;
 
@@ -118,7 +118,7 @@ function borrarAviso()
 
     $id_aviso = isset($_GET['id_aviso']) ? (int)$_GET['id_aviso'] : null;
 
-    $stmt = $pdo->prepare("DELETE FROM avisos WHERE id_aviso=?");
+    $stmt = $pdo->prepare("UPDATE avisos SET id_aviso_estado='2' WHERE id_aviso=?");
     $stmt->execute([$id_aviso]);
 
     if ($stmt->rowCount() === 0) {
@@ -127,7 +127,7 @@ function borrarAviso()
         return;
     }
 
-    echo json_encode(['mensaje' => 'Aviso modificado correctamente']);
+    echo json_encode(['mensaje' => 'Aviso eliminado']);
 }
 
 

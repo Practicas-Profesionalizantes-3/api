@@ -64,11 +64,12 @@ function altaUsuario()
 
 
 
-  $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email like ?");
+  $stmt = $pdo->prepare("SELECT 1 FROM usuarios WHERE email like ?");
   $stmt->execute([$email]);
   $respuesta = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
   if ($respuesta) {
+    http_response_code(409);
     echo json_encode(['mensaje' => 'Correo existente']);
   } else {
     if (preg_match('/^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/', $password)) {
@@ -87,6 +88,7 @@ function altaUsuario()
       http_response_code(201); // Creado
       echo json_encode(['mensaje' => 'Usuario creado correctamente!']);
     } else {
+      http_response_code(406);
       echo json_encode(['mensaje' => 'El password debe tenes una letra mayuscula y al menos un numero!']);
     }
   }
@@ -122,11 +124,11 @@ function modificarUsuario()
   $stmt = $pdo->prepare("UPDATE usuarios SET nombre=?, apellido=?, email=?, id_documento_tipo=?, id_usuario_estado=?, numero_documento=? WHERE id_usuario=?");
   $stmt->execute([$nombre, $apellido, $email, $id_documento_tipo, $id_usuario_estado, $numero_documento, $id_usuario]);
 
-  $stmt = $pdo->prepare("UPDATE usuario_roles SET id_usuario=?, id_usuario_tipo=? WHERE id_usuario=?");
-  $stmt->execute([$id_usuario, $id_usuario_tipo, $id_usuario]);
+  $stmt = $pdo->prepare("UPDATE usuario_roles SET id_usuario_tipo=? WHERE id_usuario=?");
+  $stmt->execute([$id_usuario_tipo, $id_usuario]);
 
-  $stmt = $pdo->prepare("UPDATE usuario_carreras SET id_usuario=?, id_carrera=?, anio=?, comision=? WHERE id_usuario=?");
-  $stmt->execute([$id_usuario, $id_carrera, $anio, $comision, $id_usuario]);
+  $stmt = $pdo->prepare("UPDATE usuario_carreras SET id_carrera=?, anio=?, comision=? WHERE id_usuario=?");
+  $stmt->execute([$id_carrera, $anio, $comision, $id_usuario]);
 
 
   if ($stmt->rowCount() === 0) {
