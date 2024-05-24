@@ -135,11 +135,12 @@ function listarAvisos()
 {
     global $pdo;
 
+    $id_aviso = isset($_GET['id_aviso']) ? (int)$_GET['id_aviso'] : null;
     $id_aviso_tipo = isset($_GET['id_aviso_tipo']) ? (int)$_GET['id_aviso_tipo'] : null;
     $titulo = isset($_GET['titulo']) ? $_GET['titulo'] : null;
     $descripcion = isset($_GET['descripcion']) ? $_GET['descripcion'] : null;
-    $fecha_publicacion = isset($_GET['fecha_publicacion']) ? (int)$_GET['fecha_publicacion'] : null;
-    $fecha_vencimiento = isset($_GET['fecha_vencimiento']) ? (int)$_GET['fecha_vencimiento'] : null;
+    $fecha_publicacion = isset($_GET['fecha_publicacion']) ? $_GET['fecha_publicacion'] : null;
+    $fecha_vencimiento = isset($_GET['fecha_vencimiento']) ? $_GET['fecha_vencimiento'] : null;
     $adjunto = isset($_GET['adjunto']) ? $_GET['adjunto'] : null;
     $fijado = isset($_GET['fijado']) ? $_GET['fijado'] : null;
 
@@ -160,6 +161,9 @@ function listarAvisos()
         WHERE 
         1=1";
 
+    if ($id_aviso != null) {
+        $sql .= " AND a.id_aviso = $id_aviso";
+    }
     if ($id_aviso_tipo != null) {
         $sql .= " AND a.id_aviso_tipo=$id_aviso_tipo";
     }
