@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 23-05-2024 a las 13:18:58
+-- Tiempo de generación: 25-05-2024 a las 01:21:35
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -36,18 +36,41 @@ CREATE TABLE `avisos` (
   `fecha_publicacion` date DEFAULT NULL,
   `fecha_vencimiento` date DEFAULT NULL,
   `adjunto` varchar(255) NOT NULL,
-  `fijado` varchar(255) NOT NULL
+  `fijado` varchar(255) NOT NULL,
+  `id_aviso_estado` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Volcado de datos para la tabla `avisos`
 --
 
-INSERT INTO `avisos` (`id_aviso`, `id_aviso_tipo`, `id_usuario`, `titulo`, `descripcion`, `fecha_publicacion`, `fecha_vencimiento`, `adjunto`, `fijado`) VALUES
-(1, 1, 1, 'Aviso de Mantenimiento', 'El sistema estará en mantenimiento el próximo fin de semana.', '2024-05-15', '2024-05-22', 'mantenimiento.pdf', 'No'),
-(2, 2, 2, 'Nueva Política de Seguridad', 'Se han actualizado las políticas de seguridad.', '2024-05-01', '2024-06-01', 'seguridad.pdf', 'Sí'),
-(3, 3, 3, 'Reunión de Equipo', 'Reunión programada para discutir el proyecto.', '2024-05-10', '2024-05-12', 'reunion.pdf', 'No'),
-(4, 4, 4, 'Actualización de Software', 'Nueva versión del software disponible.', '2024-05-20', '2024-05-27', 'actualizacion.pdf', 'Sí');
+INSERT INTO `avisos` (`id_aviso`, `id_aviso_tipo`, `id_usuario`, `titulo`, `descripcion`, `fecha_publicacion`, `fecha_vencimiento`, `adjunto`, `fijado`, `id_aviso_estado`) VALUES
+(1, 1, 1, 'Aviso de Mantenimiento', 'El sistema estará en mantenimiento el próximo fin de semana.', '2024-05-15', '2024-05-22', 'mantenimiento.pdf', 'No', 2),
+(2, 2, 2, 'Nueva Política de Seguridad', 'Se han actualizado las políticas de seguridad.', '2024-05-01', '2024-06-01', 'seguridad.pdf', 'Sí', 1),
+(3, 3, 3, 'Reunión de Equipo', 'Reunión programada para discutir el proyecto.', '2024-05-10', '2024-05-12', 'reunion.pdf', 'No', 2),
+(4, 4, 4, 'Actualización de Software', 'Nueva versión del software disponible.', '2024-05-20', '2024-05-27', 'actualizacion.pdf', 'Sí', 2),
+(5, 2, 3, 'Libreta Virtual', 'Se va a implementar la libreta virtual', '2024-05-12', '2024-06-12', 'Libreta_Virtual.pdf', 'si', 1),
+(6, 2, 3, 'Libreta Virtual2', 'Se va a implementar la libreta virtual2', '2024-05-12', '2024-06-12', 'Libreta_Virtual.pdf', 'si', 1),
+(7, 2, 3, 'Libreta Virtual3', 'Se va a implementar la libreta virtual2', '2024-05-12', '2024-06-12', 'Libreta_Virtual.pdf', 'si', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `aviso_estado`
+--
+
+CREATE TABLE `aviso_estado` (
+  `id_aviso_estado` int(11) NOT NULL,
+  `descripcion` varchar(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `aviso_estado`
+--
+
+INSERT INTO `aviso_estado` (`id_aviso_estado`, `descripcion`) VALUES
+(1, 'Activo'),
+(2, 'Inactivo');
 
 -- --------------------------------------------------------
 
@@ -140,8 +163,8 @@ INSERT INTO `documento_tipos` (`id_documento_tipo`, `descripcion`) VALUES
 
 CREATE TABLE `notificaciones` (
   `id_notificacion` int(11) NOT NULL,
-  `id_aviso` int(11) NOT NULL,
-  `id_tramite` int(11) NOT NULL,
+  `id_aviso` int(11) DEFAULT NULL,
+  `id_tramite` int(11) DEFAULT NULL,
   `id_notificacion_tipo` int(11) NOT NULL,
   `fecha_envio_notificacion` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -326,10 +349,12 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id_usuario`, `nombre`, `apellido`, `password`, `email`, `id_documento_tipo`, `id_usuario_estado`, `numero_documento`) VALUES
-(1, 'Juan', 'Pérez', 'password123', 'juan.perez@example.com', 1, 1, 12345678),
+(1, 'Juan', 'Pérez', 'password123', 'juan.perez@example.com', 1, 2, 12345678),
 (2, 'María', 'García', 'password123', 'maria.garcia@example.com', 2, 1, 87654321),
-(3, 'Carlos', 'López', 'password123', 'carlos.lopez@example.com', 3, 2, 11223344),
-(4, 'Ana', 'Martínez', 'password123', 'ana.martinez@example.com', 1, 2, 44332211);
+(3, 'Carlos', 'López', 'password123', 'carlos.lopez@example.com', 3, 1, 11223344),
+(4, 'Ana', 'Martínez', 'password123', 'ana.martinez@example.com', 1, 1, 44332211),
+(5, 'Maximiliano', 'Lopez', '$2y$10$k0TGHmqBOf0vsaeecJMQZOcCqRisP9zJpcDn47ZcErHFq22dr0pTe', 'javierM@itb.com.ar', 1, 1, 30524956),
+(6, 'nadia', 'lopez', '$2y$10$M4vnwxOCkhrsotEhGn464.2u7NR6vOCoX.j.Uxl5LIhjdgIFncGOG', 'juanperez@example.com', 1, 1, 2147483647);
 
 -- --------------------------------------------------------
 
@@ -352,7 +377,9 @@ INSERT INTO `usuario_carreras` (`id_usuario`, `id_carrera`, `anio`, `comision`) 
 (1, 1, 2022, 'A'),
 (2, 2, 2023, 'B'),
 (3, 3, 2021, 'C'),
-(4, 4, 2020, 'D');
+(4, 4, 2020, 'D'),
+(11, 2, 2024, 'a'),
+(12, 2, 2024, 'a');
 
 -- --------------------------------------------------------
 
@@ -411,9 +438,12 @@ CREATE TABLE `usuario_roles` (
 
 INSERT INTO `usuario_roles` (`id_usuario`, `id_usuario_tipo`) VALUES
 (1, 1),
+(1, 2),
 (2, 2),
 (3, 2),
-(4, 2);
+(4, 2),
+(11, 1),
+(12, 1);
 
 -- --------------------------------------------------------
 
@@ -442,9 +472,13 @@ INSERT INTO `usuario_tipos` (`id_usuario_tipo`, `permiso_nombre`) VALUES
 -- Indices de la tabla `avisos`
 --
 ALTER TABLE `avisos`
-  ADD PRIMARY KEY (`id_aviso`),
-  ADD KEY `fk_id_aviso_tipo` (`id_aviso_tipo`),
-  ADD KEY `fk_id_usuario` (`id_usuario`);
+  ADD PRIMARY KEY (`id_aviso`);
+
+--
+-- Indices de la tabla `aviso_estado`
+--
+ALTER TABLE `aviso_estado`
+  ADD PRIMARY KEY (`id_aviso_estado`);
 
 --
 -- Indices de la tabla `aviso_tipo`
@@ -456,7 +490,7 @@ ALTER TABLE `aviso_tipo`
 -- Indices de la tabla `aviso_usuario_tipo`
 --
 ALTER TABLE `aviso_usuario_tipo`
-  ADD PRIMARY KEY (`id_aviso`);
+  ADD PRIMARY KEY (`id_aviso`,`id_usuario_tipo`);
 
 --
 -- Indices de la tabla `carreras`
@@ -475,10 +509,7 @@ ALTER TABLE `documento_tipos`
 -- Indices de la tabla `notificaciones`
 --
 ALTER TABLE `notificaciones`
-  ADD PRIMARY KEY (`id_notificacion`),
-  ADD KEY `id_aviso` (`id_aviso`),
-  ADD KEY `id_tramite` (`id_tramite`),
-  ADD KEY `id_notificacion_tipo` (`id_notificacion_tipo`);
+  ADD PRIMARY KEY (`id_notificacion`);
 
 --
 -- Indices de la tabla `notificacion_estado`
@@ -562,7 +593,7 @@ ALTER TABLE `usuario_notificaciones`
 -- Indices de la tabla `usuario_roles`
 --
 ALTER TABLE `usuario_roles`
-  ADD PRIMARY KEY (`id_usuario`),
+  ADD PRIMARY KEY (`id_usuario`,`id_usuario_tipo`),
   ADD KEY `id_usuario_tipo` (`id_usuario_tipo`);
 
 --
@@ -574,6 +605,18 @@ ALTER TABLE `usuario_tipos`
 --
 -- AUTO_INCREMENT de las tablas volcadas
 --
+
+--
+-- AUTO_INCREMENT de la tabla `avisos`
+--
+ALTER TABLE `avisos`
+  MODIFY `id_aviso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT de la tabla `aviso_estado`
+--
+ALTER TABLE `aviso_estado`
+  MODIFY `id_aviso_estado` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `aviso_tipo`
@@ -591,7 +634,7 @@ ALTER TABLE `aviso_usuario_tipo`
 -- AUTO_INCREMENT de la tabla `notificaciones`
 --
 ALTER TABLE `notificaciones`
-  MODIFY `id_notificacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id_notificacion` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `notificacion_estado`
@@ -606,32 +649,20 @@ ALTER TABLE `tipo_notificaciones`
   MODIFY `id_notificacion_tipo` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
+-- AUTO_INCREMENT de la tabla `usuarios`
+--
+ALTER TABLE `usuarios`
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
 -- AUTO_INCREMENT de la tabla `usuario_notificaciones`
 --
 ALTER TABLE `usuario_notificaciones`
   MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
--- AUTO_INCREMENT de la tabla `usuarios`
+-- Restricciones para tablas volcadas
 --
-ALTER TABLE `usuarios`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
-
-
---
--- Filtros para la tabla `avisos`
---
-ALTER TABLE `avisos`
-  ADD CONSTRAINT `fk_id_aviso_tipo` FOREIGN KEY (`id_aviso_tipo`) REFERENCES `aviso_tipo` (`id_aviso_tipo`),
-  ADD CONSTRAINT `fk_id_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`);
-
---
--- Filtros para la tabla `notificaciones`
---
-ALTER TABLE `notificaciones`
-  ADD CONSTRAINT `fk_id_aviso` FOREIGN KEY (`id_aviso`) REFERENCES `avisos` (`id_aviso`),
-  ADD CONSTRAINT `fk_id_notificacion_tipo` FOREIGN KEY (`id_notificacion_tipo`) REFERENCES `tipo_notificaciones` (`id_notificacion_tipo`),
-  ADD CONSTRAINT `fk_id_tramite` FOREIGN KEY (`id_tramite`) REFERENCES `tramites` (`id_tramite`);
 
 --
 -- Filtros para la tabla `tramite_adjuntos`
