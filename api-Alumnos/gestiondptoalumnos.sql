@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 25-05-2024 a las 01:21:35
+-- Tiempo de generación: 25-05-2024 a las 02:10:10
 -- Versión del servidor: 10.4.24-MariaDB
 -- Versión de PHP: 8.1.6
 
@@ -49,7 +49,7 @@ INSERT INTO `avisos` (`id_aviso`, `id_aviso_tipo`, `id_usuario`, `titulo`, `desc
 (2, 2, 2, 'Nueva Política de Seguridad', 'Se han actualizado las políticas de seguridad.', '2024-05-01', '2024-06-01', 'seguridad.pdf', 'Sí', 1),
 (3, 3, 3, 'Reunión de Equipo', 'Reunión programada para discutir el proyecto.', '2024-05-10', '2024-05-12', 'reunion.pdf', 'No', 2),
 (4, 4, 4, 'Actualización de Software', 'Nueva versión del software disponible.', '2024-05-20', '2024-05-27', 'actualizacion.pdf', 'Sí', 2),
-(5, 2, 3, 'Libreta Virtual', 'Se va a implementar la libreta virtual', '2024-05-12', '2024-06-12', 'Libreta_Virtual.pdf', 'si', 1),
+(5, 1, 1, 'Aviso de Mantenimiento', 'El sistema estará en mantenimiento el próximo fin ', '2024-05-12', '2024-05-14', 'mantenimiento', 'si', 1),
 (6, 2, 3, 'Libreta Virtual2', 'Se va a implementar la libreta virtual2', '2024-05-12', '2024-06-12', 'Libreta_Virtual.pdf', 'si', 1),
 (7, 2, 3, 'Libreta Virtual3', 'Se va a implementar la libreta virtual2', '2024-05-12', '2024-06-12', 'Libreta_Virtual.pdf', 'si', 1);
 
@@ -312,7 +312,7 @@ INSERT INTO `tramite_estados` (`id_estado_tramite`, `descripcion`) VALUES
 
 CREATE TABLE `tramite_movimientos` (
   `id_tramite` int(11) NOT NULL,
-  `fecha_movimiento` date DEFAULT NULL,
+  `fecha_movimiento` date NOT NULL,
   `id_usuario` int(11) NOT NULL,
   `observacion` varchar(255) NOT NULL,
   `id_estado_tramite` int(11) NOT NULL
@@ -349,12 +349,23 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id_usuario`, `nombre`, `apellido`, `password`, `email`, `id_documento_tipo`, `id_usuario_estado`, `numero_documento`) VALUES
-(1, 'Juan', 'Pérez', 'password123', 'juan.perez@example.com', 1, 2, 12345678),
+(1, 'Maximiliano', 'Lopez', 'password123', 'javierM@itb.com.ar', 1, 1, 30524956),
 (2, 'María', 'García', 'password123', 'maria.garcia@example.com', 2, 1, 87654321),
 (3, 'Carlos', 'López', 'password123', 'carlos.lopez@example.com', 3, 1, 11223344),
 (4, 'Ana', 'Martínez', 'password123', 'ana.martinez@example.com', 1, 1, 44332211),
 (5, 'Maximiliano', 'Lopez', '$2y$10$k0TGHmqBOf0vsaeecJMQZOcCqRisP9zJpcDn47ZcErHFq22dr0pTe', 'javierM@itb.com.ar', 1, 1, 30524956),
-(6, 'nadia', 'lopez', '$2y$10$M4vnwxOCkhrsotEhGn464.2u7NR6vOCoX.j.Uxl5LIhjdgIFncGOG', 'juanperez@example.com', 1, 1, 2147483647);
+(6, 'nadia', 'lopez', '$2y$10$M4vnwxOCkhrsotEhGn464.2u7NR6vOCoX.j.Uxl5LIhjdgIFncGOG', 'juanperez@example.com', 1, 1, 2147483647),
+(13, 'Nadia123', 'lopez2', '$2y$10$wpkzAPuArFWzkuPOI76kEueLQq.L0d8p1hWpV.N3ObRs5wnDxnkKm', 'juanperez@example.com123', 1, 1, 2147483647),
+(14, 'maxi', 'lopez2', '$2y$10$Gur3ytpg4nyPV4tlwMvCLOmWb4fmBjOsLAFIl3nBaridS6NuLMNpm', 'juanasdfdsaperez@example.com123', 1, 1, 2147483647),
+(15, 'maxi', 'lopez2', '$2y$10$WqJ7VcrUMxj6Uo36Yw0kpOG/GIauyqfNCelPzLeT6dKRXOKN/XmCu', 'juanas1231231dfdsaperez@example.com123', 1, 1, 2147483647),
+(16, 'maxi2', 'lopez212', '$2y$10$87P6FvIz4P/h.mLosFjkj.mX9nC/.lFe3rYVGwifJ4GBgAHJB9HTm', 'juanas1231231dfdsap121erez@example.com123', 1, 1, 2147483647),
+(17, 'maxi2', 'lopez212', '$2y$10$sguDzH.4QrnOqsBNorPlt.5Ejb5e.58nQZvjAfCW4Wmstv4hx7uH2', 'juanas12222231231dfdsap121erez@example.com123', 1, 1, 2147483647),
+(18, 'maxi2', 'lopez212', '$2y$10$bTSkkvBS/se2wgB29qkAAec9FOSuC4SesVzAZZTMNFEDKMO242MUC', 'juan1as12222231231dfdsap121erez@example.com123', 1, 1, 2147483647),
+(19, 'maxi2', 'lopez212', '$2y$10$8xhfz8tYqYUWDyZpm3jor.v69TuA7ttC5NS3FNSnEYkwfplz7SAr6', 'juan1a111s12222231231dfdsap121erez@example.com123', 1, 1, 2147483647),
+(20, 'maxi2', 'lopez212', '$2y$10$IE1Xpjjrv483.vL8aQFOlOPkdVAiOyaiJXdDDQ3HNdOzQUujOYYbO', 'juan111a111s12222231231dfdsap121erez@example.com123', 1, 1, 2147483647),
+(21, 'maxi2', 'lopez212', '$2y$10$MCA0pu0jiOiexxnlI8OlO.dXiqOoOPoupwBQCqxEJUdPlW2cSoO8S', 'jua1n111a111s12222231231dfdsap121erez@example.com123', 1, 1, 2147483647),
+(22, 'maxi2', 'lopez212', '$2y$10$i0CQLhUwB/mYEQbxEDVD8uCXpmUk1TXXQvDKlWtRHHbM9uFRUpKBS', 'maxilopez@hotmail.com', 1, 1, 2147483647),
+(23, 'maxi2', 'lopez212', '$2y$10$VNlGU/6OkZDez9/6SrdlduCcpqb9lNLIwW5Q8WJT4r4X4ZVpOiCv6', 'maasaxilopez@hotmail.com', 1, 1, 2147483647);
 
 -- --------------------------------------------------------
 
@@ -374,12 +385,17 @@ CREATE TABLE `usuario_carreras` (
 --
 
 INSERT INTO `usuario_carreras` (`id_usuario`, `id_carrera`, `anio`, `comision`) VALUES
-(1, 1, 2022, 'A'),
+(1, 1, 2025, 'B'),
 (2, 2, 2023, 'B'),
 (3, 3, 2021, 'C'),
 (4, 4, 2020, 'D'),
 (11, 2, 2024, 'a'),
-(12, 2, 2024, 'a');
+(12, 2, 2024, 'a'),
+(13, 2, 2024, 'a'),
+(19, 2, 2024, 'a'),
+(21, 2, 2024, 'a'),
+(22, 2, 2024, 'a'),
+(23, 2, 2024, 'a');
 
 -- --------------------------------------------------------
 
@@ -437,13 +453,18 @@ CREATE TABLE `usuario_roles` (
 --
 
 INSERT INTO `usuario_roles` (`id_usuario`, `id_usuario_tipo`) VALUES
-(1, 1),
-(1, 2),
+(1, 3),
 (2, 2),
+(3, 1),
 (3, 2),
 (4, 2),
 (11, 1),
-(12, 1);
+(12, 1),
+(13, 1),
+(13, 2),
+(21, 2),
+(22, 1),
+(22, 2);
 
 -- --------------------------------------------------------
 
@@ -462,7 +483,8 @@ CREATE TABLE `usuario_tipos` (
 
 INSERT INTO `usuario_tipos` (`id_usuario_tipo`, `permiso_nombre`) VALUES
 (1, 'Administrador'),
-(2, 'Usuario Regular');
+(2, 'Usuario Regular'),
+(3, 'Docente');
 
 --
 -- Índices para tablas volcadas
@@ -556,7 +578,7 @@ ALTER TABLE `tramite_estados`
 -- Indices de la tabla `tramite_movimientos`
 --
 ALTER TABLE `tramite_movimientos`
-  ADD PRIMARY KEY (`id_tramite`),
+  ADD PRIMARY KEY (`id_tramite`,`fecha_movimiento`),
   ADD KEY `fecha_movimiento` (`fecha_movimiento`);
 
 --
@@ -571,7 +593,7 @@ ALTER TABLE `usuarios`
 -- Indices de la tabla `usuario_carreras`
 --
 ALTER TABLE `usuario_carreras`
-  ADD PRIMARY KEY (`id_usuario`),
+  ADD PRIMARY KEY (`id_usuario`,`id_carrera`),
   ADD KEY `id_carrera` (`id_carrera`);
 
 --
@@ -652,7 +674,7 @@ ALTER TABLE `tipo_notificaciones`
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT de la tabla `usuario_notificaciones`

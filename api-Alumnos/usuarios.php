@@ -138,7 +138,6 @@ function modificarUsuario()
   $stmt = $pdo->prepare("UPDATE usuario_carreras SET id_carrera=?, anio=?, comision=? WHERE id_usuario=?");
   $stmt->execute([$id_carrera, $anio, $comision, $id_usuario]);
 
-
   if ($stmt->rowCount() === 0) {
     http_response_code(404); // No encontrado
     echo json_encode(['error' => 'Usuario modificado correctamente!']);
