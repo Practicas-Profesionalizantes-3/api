@@ -79,8 +79,12 @@ function altaUsuario()
       $stmt->execute([$nombre, $apellido, $password, $email, $id_documento_tipo, $id_usuario_estado, $numero_documento]);
 
       $id_usuario = $pdo->lastInsertId();
-      $stmt = $pdo->prepare("INSERT INTO usuario_roles (id_usuario, id_usuario_tipo) VALUES (?, ?)");
-      $stmt->execute([$id_usuario, $id_usuario_tipo]);
+
+      foreach ($id_usuario_tipo as $key => $value) {
+        $stmt = $pdo->prepare("INSERT INTO usuario_roles (id_usuario, id_usuario_tipo) VALUES (?, ?)");
+        $stmt->execute([$id_usuario, $value]);
+
+      }
 
       $stmt = $pdo->prepare("INSERT INTO usuario_carreras (id_usuario, id_carrera, anio, comision) VALUES (?, ?, ?, ?)");
       $stmt->execute([$id_usuario, $id_carrera, $anio, $comision]);
@@ -120,12 +124,16 @@ function modificarUsuario()
   $comision = $data['comision'];
   $id_usuario_tipo = $data['id_usuario_tipo'];
 
-
   $stmt = $pdo->prepare("UPDATE usuarios SET nombre=?, apellido=?, email=?, id_documento_tipo=?, id_usuario_estado=?, numero_documento=? WHERE id_usuario=?");
   $stmt->execute([$nombre, $apellido, $email, $id_documento_tipo, $id_usuario_estado, $numero_documento, $id_usuario]);
 
-  $stmt = $pdo->prepare("UPDATE usuario_roles SET id_usuario_tipo=? WHERE id_usuario=?");
-  $stmt->execute([$id_usuario_tipo, $id_usuario]);
+  $stmt = $pdo->prepare("DELETE FROM usuario_roles WHERE id_usuario=?");
+  $stmt->execute([$id_usuario]);
+
+  foreach ($id_usuario_tipo as $key => $value) {
+    $stmt = $pdo->prepare("INSERT INTO usuario_roles (id_usuario, id_usuario_tipo) VALUES (?, ?)");
+    $stmt->execute([$id_usuario, $value]);
+  }
 
   $stmt = $pdo->prepare("UPDATE usuario_carreras SET id_carrera=?, anio=?, comision=? WHERE id_usuario=?");
   $stmt->execute([$id_carrera, $anio, $comision, $id_usuario]);
