@@ -158,10 +158,10 @@ function bajaUsuario()
     throw new Exception('Todos los campos son obligatorios');
   }
 
-  $numero_documento = isset($_GET['numero_documento']) ? (int) $_GET['numero_documento'] : null;
+  $id_usuario = isset($_GET['id_usuario']) ? (int) $_GET['id_usuario'] : null;
 
-  $stmt = $pdo->prepare("UPDATE usuarios SET id_usuario_estado = '2' WHERE numero_documento=?");
-  $stmt->execute([$numero_documento]);
+  $stmt = $pdo->prepare("UPDATE usuarios SET id_usuario_estado = '2' WHERE id_usuario=?");
+  $stmt->execute([$id_usuario]);
 
   if ($stmt->rowCount() === 0) {
     http_response_code(404); // No encontrado
