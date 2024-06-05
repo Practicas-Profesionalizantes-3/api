@@ -15,7 +15,7 @@ try {
       listarUsuarios();
       break;
     case 'POST':
-      altaUsuario();
+      iniciarSesion();
       break;
     case 'PUT':
       modificarUsuario();
@@ -33,6 +33,32 @@ try {
 } catch (Exception $e) {
   http_response_code(400); // Solicitud incorrecta
   echo json_encode(['error' => $e->getMessage()]);
+}
+
+function iniciarSesion()
+{
+  global $pdo;
+  $data = json_decode(file_get_contents('php://input'), true);
+
+  if (!isset($data['user']) || !isset($data['password'])) {
+    echo json_encode("Usuario o contraseña no ingresados");
+    return;
+  }
+
+  $email = $data['user'];
+  $password = $data['password'];
+  $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email=? AND password=?");
+  $stmt->execute([$email, $password]);
+  $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+  if ($usuario) {
+    session_start();
+    $_SESSION['loggedIn'] = true;
+    $_SESSION['username'] = $email;
+    echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true]);
+  } else {
+    echo json_encode(["success" => false, 'error' => "Usuario o contraseña incorrectos", 'codigo' => 401]);
+  }
 }
 
 function altaUsuario()
@@ -83,7 +109,6 @@ function altaUsuario()
       foreach ($id_usuario_tipo as $key => $value) {
         $stmt = $pdo->prepare("INSERT INTO usuario_roles (id_usuario, id_usuario_tipo) VALUES (?, ?)");
         $stmt->execute([$id_usuario, $value]);
-
       }
 
       $stmt = $pdo->prepare("INSERT INTO usuario_carreras (id_usuario, id_carrera, anio, comision) VALUES (?, ?, ?, ?)");
