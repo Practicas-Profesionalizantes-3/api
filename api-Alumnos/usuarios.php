@@ -47,15 +47,24 @@ function iniciarSesion()
 
   $email = $data['user'];
   $password = $data['password'];
-  $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email=? AND password=?");
-  $stmt->execute([$email, $password]);
-  $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
-  if ($usuario) {
-    session_start();
-    $_SESSION['loggedIn'] = true;
-    $_SESSION['username'] = $email;
-    echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true]);
+  $stmt = $pdo->prepare("SELECT password FROM usuarios WHERE email=?");
+  $stmt->execute([$email]);
+  $hashed_password = $stmt->fetchColumn();
+
+  if (password_verify($password, $hashed_password)) {
+    $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email=?");
+    $stmt->execute([$email]);
+    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($usuario) {
+      session_start();
+      $_SESSION['loggedIn'] = true;
+      $_SESSION['username'] = $email;
+      echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true]);
+    } else {
+      echo json_encode(["success" => false, 'error' => "Usuario o contraseña incorrectos", 'codigo' => 401]);
+    }
   } else {
     echo json_encode(["success" => false, 'error' => "Usuario o contraseña incorrectos", 'codigo' => 401]);
   }
