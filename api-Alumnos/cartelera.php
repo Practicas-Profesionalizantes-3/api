@@ -110,9 +110,10 @@ function modificarAviso()
     $fecha_vencimiento = $data['fecha_vencimiento'];
     $adjunto = $data['adjunto'];
     $fijado = $data['fijado'];
+    $estado = $data['id_aviso_estado'];
 
-    $stmt = $pdo->prepare("UPDATE avisos SET id_aviso_tipo=?, id_usuario=?, titulo=?, descripcion=?, fecha_publicacion=?, fecha_vencimiento=?, adjunto=?, fijado=? WHERE id_aviso=?");
-    $stmt->execute([$id_aviso_tipo, $id_usuario, $titulo, $descripcion, $fecha_publicacion, $fecha_vencimiento, $adjunto, $fijado, $id_aviso]);
+    $stmt = $pdo->prepare("UPDATE avisos SET id_aviso_tipo=?, id_usuario=?, titulo=?, descripcion=?, fecha_publicacion=?, fecha_vencimiento=?, adjunto=?, fijado=?, id_aviso_estado=? WHERE id_aviso=?");
+    $stmt->execute([$id_aviso_tipo, $id_usuario, $titulo, $descripcion, $fecha_publicacion, $fecha_vencimiento, $adjunto, $fijado, $estado, $id_aviso]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
