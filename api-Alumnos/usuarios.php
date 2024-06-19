@@ -59,9 +59,7 @@ function iniciarSesion()
 
     if ($usuario) {
       session_start();
-      $_SESSION['loggedIn'] = true;
-      $_SESSION['username'] = $email;
-      echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true]);
+      echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true, "data" => json_encode($usuario)]);
     } else {
       echo json_encode(["success" => false, 'error' => "Usuario o contraseña incorrectos", 'codigo' => 401]);
     }
