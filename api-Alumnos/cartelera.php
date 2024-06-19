@@ -170,6 +170,7 @@ function listarAvisos()
         a.fecha_vencimiento, 
         a.adjunto, 
         a.fijado, 
+        a.ubicacion_imagen,
         e.descripcion as estado,
         at.descripcion AS aviso_tipo, 
         u.nombre AS usuario,
