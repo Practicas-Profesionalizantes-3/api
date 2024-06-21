@@ -17,7 +17,7 @@ try {
                 case 'aviso_tipos':
                     listarAvisoTipos();
                     break;
-                // Agrega más casos para otras acciones GET
+                    // Agrega más casos para otras acciones GET
                 default:
                     listarAvisos();
                     break;
@@ -237,13 +237,13 @@ function listarAvisoTipos()
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
-    $anuncios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $cartelera = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if (!$anuncios) {
+    if (!$cartelera) {
         http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'No se encontraron tipos de anuncios']);
+        echo json_encode(['error' => 'No se encontraron tipos de cartelera']);
         return;
     }
 
-    echo json_encode($anuncios);
+    echo json_encode($cartelera);
 }

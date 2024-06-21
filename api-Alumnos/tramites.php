@@ -6,13 +6,13 @@ header('Content-Type: application/json');
 try {
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'GET':
-                listarTramites();
+            listarTramites();
             break;
         case 'POST':
             crearTramites();
             break;
         case 'PUT':
-                modificarTramites();
+            modificarTramites();
             break;
         case 'DELETE':
             borrarTramites();
@@ -29,43 +29,65 @@ try {
     echo json_encode(['error' => $e->getMessage()]);
 }
 
-function crearTramites() {
+function crearTramites()
+{
     global $pdo;
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['tipo_tramite']) || !isset($data['descripcion']) || !isset($data['estado'])) {
+    if (
+        !isset($data['id_tramite']) || !isset($data['id_usuario_creacion']) || !isset($data['id_usuario_responsable'])
+        || !isset($data['id_tramite_tipo ']) || !isset($data['id_estado_tramite ']) || !isset($data['descripcion'])
+        || !isset($data['fecha_creacion'])
+    ) {
         throw new Exception('Todos los campos son obligatorios');
     }
 
-    $tipo_tramite = $data['tipo_tramite'];
+    $id_tramite = $data['id_tramite'];
+    $id_usuario_creacion = $data['id_usuario_creacion'];
+    $id_usuario_responsable = $data['id_usuario_responsable'];
+    $id_tramite_tipo = $data['id_tramite_tipo'];
+    $id_estado_tramite = $data['id_estado_tramite'];
     $descripcion = $data['descripcion'];
-    $estado = $data['estado'];
+    $fecha_creacion = $data['fecha_creacion'];
 
-    $stmt = $pdo->prepare("INSERT INTO tramites (tipo_tramite, descripcion, estado) VALUES (?, ?, ?)");
-    $stmt->execute([$tipo_tramite, $descripcion, $estado]);
+    $stmt = $pdo->prepare("INSERT INTO tramites (id_tramite, id_usuario_creacion, id_usuario_responsable, id_tramite_tipo, 
+    id_estado_tramite, descripcion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([
+        $id_tramite, $id_usuario_creacion, $id_usuario_responsable, $id_tramite_tipo,, $id_estado_tramite,
+        $descripcion, $fecha_creacion
+    ]);
 
     http_response_code(201); // Creado
-   
-    echo json_encode(['mensaje' => "tramite Nº ".$pdo->lastInsertId()." Creado Correctamente!!"]);
+
+    echo json_encode(['mensaje' => "tramite Nº " . $pdo->lastInsertId() . " Creado Correctamente!!"]);
 }
 
-function modificarTramites() {
+function modificarTramites()
+{
     global $pdo;
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['id']) || !isset($data['tipo_tramite']) || !isset($data['descripcion']) || !isset($data['estado'])) {
+    if (
+        !isset($data['id_tramite']) || !isset($data['id_usuario_creacion']) || !isset($data['id_usuario_responsable'])
+        || !isset($data['id_tramite_tipo ']) || !isset($data['id_estado_tramite ']) || !isset($data['descripcion'])
+        || !isset($data['fecha_creacion'])
+    ) {
         throw new Exception('Todos los campos son obligatorios');
     }
 
-    $id = $data['id'];
-    $tipo_tramite = $data['tipo_tramite'];
+    $id_tramite = $data['id_tramite'];
+    $id_usuario_creacion = $data['id_usuario_creacion'];
+    $id_usuario_responsable = $data['id_usuario_responsable'];
+    $id_tramite_tipo = $data['id_tramite_tipo'];
+    $id_estado_tramite = $data['id_estado_tramite'];
     $descripcion = $data['descripcion'];
-    $estado = $data['estado'];
+    $fecha_creacion = $data['fecha_creacion'];
 
-    $stmt = $pdo->prepare("UPDATE tramites SET tipo_tramite=?, descripcion=?, estado=? WHERE id=?");
-    $stmt->execute([$tipo_tramite, $descripcion, $estado, $id]);
+    $stmt = $pdo->prepare("UPDATE tramites SET id_usuario_creacion=?, id_usuario_responsable=?, id_tramite_tipo=?,
+    id_estado_tramite=?, descripcion=?, fecha_creacion=? WHERE id_tramite=?");
+    $stmt->execute([$id_usuario_creacion, $id_usuario_responsable, $id_tramite_tipo, $id_estado_tramite, $descripcion, $fecha_creacion, $id_tramite]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
@@ -76,20 +98,20 @@ function modificarTramites() {
     echo json_encode(['mensaje' => 'Tramite modificado Con Exito!']);
 }
 
-
-function borrarTramites() {
+function borrarTramites()
+{
     global $pdo;
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['id'])){
+    if (!isset($data['id_tramite'])) {
         throw new Exception('Todos los campos son obligatorios');
     }
 
-    $id = $data['id'];
+    $id_tramite = $data['id_tramite'];
 
-    $stmt = $pdo->prepare("DELETE FROM tramites WHERE id=?");
-    $stmt->execute([$id]);
+    $stmt = $pdo->prepare("DELETE FROM tramites WHERE id_tramite=?");
+    $stmt->execute([$id_tramite]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
@@ -101,37 +123,67 @@ function borrarTramites() {
 }
 
 
-function listarTramites() {
+function listarTramites()
+{
     global $pdo;
 
-    $id = isset($_GET['id'])? (int)$_GET['id'] : null;
-    $tipo_tramite = isset($_GET['tipo_tramite'])? $_GET['tipo_tramite'] : null;
-    $descripcion = isset($_GET['descripcion'])? $_GET['descripcion'] : null;
-    $estado = isset($_GET['estado'])? $_GET['estado'] : null;
-    
-    if ($id) {
-        $stmt = $pdo->prepare("SELECT * FROM tramites WHERE id =?");
-        $stmt->execute([$id]);
-    } elseif($tipo_tramite) {
-        $stmt = $pdo->prepare("SELECT * FROM tramites WHERE tipo_tramite LIKE?");
-        $stmt->execute(["%$tipo_tramite%"]);
-    } elseif($descripcion){
-        $stmt = $pdo->prepare("SELECT * FROM tramites WHERE descripcion LIKE ?");
-        $stmt->execute(["%$descripcion%"]);
-    } else{
-        $stmt = $pdo->prepare("SELECT * FROM tramites WHERE estado LIKE ?");
-        $stmt->execute(["%$estado%"]);
-    } 
+    $id_tramite = isset($_GET['id_tramite']) ? $_GET['id_tramite'] : null;
+    $id_usuario_creacion = isset($_GET['id_usuario_creacion']) ? (int)$_GET['id_usuario_creacion'] : null;
+    $id_usuario_responsable = isset($_GET['id_usuario_responsable']) ? $_GET['id_usuario_responsable'] : null;
+    $id_tramite_tipo = isset($_GET['id_tramite_tipo']) ? $_GET['id_tramite_tipo'] : null;
+    $id_estado_tramite = isset($_GET['id_estado_tramite']) ? $_GET['id_estado_tramite'] : null;
+    $descripcion = isset($_GET['descripcion']) ? $_GET['descripcion'] : null;
+    $fecha_creacion = isset($_GET['fecha_creacion']) ? $_GET['fecha_creacion'] : null;
 
-    $tramite = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $sql = "SELECT
+        t.id_tramite,
+        uc.nombre AS usuario,
+        ur.nombre AS responsable,
+        tt.descripcion AS tipo_tramite,
+        te.descripcion AS estado_tramite,
+        t.descripcion,
+        t.fecha_creacion
+    FROM
+        tramites AS t
+        INNER JOIN tramites_tipo AS tt ON t.id_tramite_tipo = tt.id_tramite_tipo
+        INNER JOIN tramite_estados AS te ON t.id_estado_tramite = te.id_estado_tramite
+        INNER JOIN usuarios AS uc ON t.id_usuario_creacion = uc.id_usuario
+        INNER JOIN usuarios AS ur ON t.id_usuario_responsable = ur.id_usuario
+    WHERE
+        1=1
+    ";
 
-    if (!$tramite) {
+    if ($id_tramite  != null) {
+        $sql .= " AND id_tramite =$id_tramite ";
+    }
+    //se busca por descripcion y no por id
+    if ($id_usuario_creacion != null) {
+        $sql .= " AND LOWER(id_usuario_creacion) like LOWER('%$id_usuario_creacion%')";
+    }
+    if ($id_usuario_responsable != null) {
+        $sql .= " AND LOWER(id_usuario_responsable) like LOWER('%$id_usuario_responsable%')";
+    }
+    if ($id_tramite_tipo != null) {
+        $sql .= " AND LOWER(id_tramite_tipo) like LOWER('%$id_tramite_tipo%')";
+    }
+    if ($id_estado_tramite != null) {
+        $sql .= " AND LOWER(id_estado_tramite) like LOWER('%$id_estado_tramite%')";
+    }
+    if ($fecha_creacion != null) {
+        $sql .= " AND LOWER(fecha_creacion) like LOWER('%$fecha_creacion%')";
+    }
+
+
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    $aviso_tipo = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if (!$aviso_tipo) {
         http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'No se encontraron Tramite']);
+        echo json_encode(['error' => 'No se encontraron Tipo de Aviso']);
         return;
     }
 
-    echo json_encode($tramite);
+    echo json_encode($aviso_tipo);
 }
-
-
