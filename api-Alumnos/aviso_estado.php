@@ -65,16 +65,16 @@ function modificarAviso_estado()
     $descripcion = $data['descripcion'];
 
 
-    $stmt = $pdo->prepare("UPDATE aviso_estado SET id_aviso_estado=?, descripcion=? WHERE id_aviso_estado=?");
-    $stmt->execute([$id_aviso_estado, $descripcion, $id_aviso_estado]);
+    $stmt = $pdo->prepare("UPDATE aviso_estado SET descripcion=? WHERE id_aviso_estado=?");
+    $stmt->execute([$descripcion, $id_aviso_estado]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'Tipos de Estados no encontrado']);
+        echo json_encode(['error' => 'Aviso de Estado no encontrado']);
         return;
     }
 
-    echo json_encode(['mensaje' => 'Tipos de Estados modificado Con Exito!']);
+    echo json_encode(['mensaje' => 'Aviso de Estado modificado Con Exito!']);
 }
 
 
@@ -95,11 +95,11 @@ function borrarAviso_estado()
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'Tipos de Estados no encontrado']);
+        echo json_encode(['error' => 'Aviso de Estado no encontrado']);
         return;
     }
 
-    echo json_encode(['mensaje' => 'Tipos de Estados eliminado Con Exito!']);
+    echo json_encode(['mensaje' => 'Aviso de Estado eliminado Con Exito!']);
 }
 
 

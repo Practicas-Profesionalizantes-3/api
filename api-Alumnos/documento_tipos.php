@@ -48,7 +48,7 @@ function crearDocumento_tipo()
 
     http_response_code(201); // Creado
 
-    echo json_encode(['mensaje' => "Tipo de Documento Nº " . $pdo->lastInsertId() . " Creado Correctamente!!"]);
+    echo json_encode(['mensaje' => " Creado Correctamente!!"]);
 }
 
 function modificarDocumento_tipo()
@@ -61,12 +61,12 @@ function modificarDocumento_tipo()
         throw new Exception('Todos los campos son obligatorios');
     }
 
-    $id_documento_tipo  = $data['id_documento_tipo'];
+    $id_documento_tipo = $data['id_documento_tipo'];
     $descripcion = $data['descripcion'];
 
 
-    $stmt = $pdo->prepare("UPDATE documento_tipo SET id_documento_tipo=?, descripcion=? WHERE id_documento_tipo=?");
-    $stmt->execute([$id_documento_tipo, $descripcion, $id_documento_tipo]);
+    $stmt = $pdo->prepare("UPDATE documento_tipos SET descripcion=? WHERE id_documento_tipo=?");
+    $stmt->execute([$descripcion, $id_documento_tipo]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
@@ -107,15 +107,15 @@ function listarDocumento_tipo()
 {
     global $pdo;
 
-    $id_documento_tipo  = isset($_GET['id_documento_tipo ']) ? (int)$_GET['id_documento_tipo '] : null;
+    $id_documento_tipo = isset($_GET['id_documento_tipo']) ? (int)$_GET['id_documento_tipo'] : null;
     $descripcion = isset($_GET['descripcion']) ? $_GET['descripcion'] : null;
 
     $sql = "SELECT * 
     FROM documento_tipos 
     WHERE 1=1";
 
-    if ($id_documento_tipo  != null) {
-        $sql .= " AND id_documento_tipo =$id_documento_tipo ";
+    if ($id_documento_tipo != null) {
+        $sql .= " AND id_documento_tipo=$id_documento_tipo ";
     }
     if ($descripcion != null) {
         $sql .= " AND LOWER(descripcion) like LOWER('%$descripcion%')";

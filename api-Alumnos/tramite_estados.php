@@ -9,7 +9,7 @@ try {
             listarTramite_estados();
             break;
         case 'POST':
-            crearTramites_tipo();
+            crearTramites_estados();
             break;
         case 'PUT':
             modificarTramite_estados();
@@ -29,7 +29,7 @@ try {
     echo json_encode(['error' => $e->getMessage()]);
 }
 
-function crearTramite_estados()
+function crearTramites_estados()
 {
     global $pdo;
 
@@ -48,7 +48,7 @@ function crearTramite_estados()
 
     http_response_code(201); // Creado
 
-    echo json_encode(['mensaje' => "Estado de Tramite Nº " . $pdo->lastInsertId() . " Creado Correctamente!!"]);
+    echo json_encode(['mensaje' =>  " Creado Correctamente!!"]);
 }
 
 function modificarTramite_estados()

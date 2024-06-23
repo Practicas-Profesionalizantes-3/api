@@ -48,7 +48,7 @@ function crearTramites_tipo()
 
     http_response_code(201); // Creado
 
-    echo json_encode(['mensaje' => "Tipo de Tramite Nº " . $pdo->lastInsertId() . " Creado Correctamente!!"]);
+    echo json_encode(['mensaje' => " Creado Correctamente!!"]);
 }
 
 function modificarTramites_tipo()

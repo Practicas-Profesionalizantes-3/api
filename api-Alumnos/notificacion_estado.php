@@ -65,8 +65,8 @@ function modificarNotificacion_estado()
     $descripcion = $data['descripcion'];
 
 
-    $stmt = $pdo->prepare("UPDATE notificacion_estado SET id_notificacion_estado=?, descripcion=? WHERE id_notificacion_estado=?");
-    $stmt->execute([$id_notificacion_estado, $descripcion, $id_notificacion_estado]);
+    $stmt = $pdo->prepare("UPDATE notificacion_estado SET descripcion=? WHERE id_notificacion_estado=?");
+    $stmt->execute([$descripcion, $id_notificacion_estado]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
@@ -84,14 +84,14 @@ function borrarNotificacion_estado()
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['id_aviso_estado'])) {
+    if (!isset($data['id_notificacion_estado'])) {
         throw new Exception('Todos los campos son obligatorios');
     }
 
-    $id_aviso_estado = $data['id_aviso_estado'];
+    $id_notificacion_estado = $data['id_notificacion_estado'];
 
-    $stmt = $pdo->prepare("DELETE FROM notificacion_estado WHERE id_aviso_estado=?");
-    $stmt->execute([$id_aviso_estado]);
+    $stmt = $pdo->prepare("DELETE FROM notificacion_estado WHERE id_notificacion_estado=?");
+    $stmt->execute([$id_notificacion_estado]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado

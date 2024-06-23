@@ -48,7 +48,7 @@ function crearCarreras()
 
     http_response_code(201); // Creado
 
-    echo json_encode(['mensaje' => "Carrera Nº " . $pdo->lastInsertId() . " Creado Correctamente!!"]);
+    echo json_encode(['mensaje' => "Creado Correctamente!!"]);
 }
 
 function modificarCarreras()
@@ -65,8 +65,8 @@ function modificarCarreras()
     $descripcion = $data['descripcion'];
 
 
-    $stmt = $pdo->prepare("UPDATE carreras SET id_carrera=?, descripcion=? WHERE id_carrera=?");
-    $stmt->execute([$id_carrera, $descripcion, $id_carrera]);
+    $stmt = $pdo->prepare("UPDATE carreras SET descripcion=? WHERE id_carrera=?");
+    $stmt->execute([$descripcion, $id_carrera]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
@@ -115,7 +115,7 @@ function listarCarreras()
     WHERE 1=1";
 
     if ($id_carrera != null) {
-        $sql .= " AND carreras =$id_carrera";
+        $sql .= " AND id_carrera =$id_carrera";
     }
     if ($descripcion != null) {
         $sql .= " AND LOWER(descripcion) like LOWER('%$descripcion%')";

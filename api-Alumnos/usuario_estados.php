@@ -35,20 +35,20 @@ function crearUsuario_estados()
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['id_usuario_estado']) || !isset($data['descripcion'])) {
+    if (!isset($data['id_usuario_estado']) || !isset($data['permiso_nombre'])) {
         throw new Exception('Todos los campos son obligatorios');
     }
 
     $id_usuario_estado = $data['id_usuario_estado'];
-    $descripcion = $data['descripcion'];
+    $permiso_nombre = $data['permiso_nombre'];
 
 
-    $stmt = $pdo->prepare("INSERT INTO usuario_estados (id_usuario_estado, descripcion) VALUES (?, ?)");
-    $stmt->execute([$id_usuario_estado, $descripcion]);
+    $stmt = $pdo->prepare("INSERT INTO usuario_tipos (id_usuario_estado, permiso_nombre) VALUES (?, ?)");
+    $stmt->execute([$id_usuario_estado, $permiso_nombre]);
 
     http_response_code(201); // Creado
 
-    echo json_encode(['mensaje' => "Estado de Usuario Nº " . $pdo->lastInsertId() . " Creado Correctamente!!"]);
+    echo json_encode(['mensaje' => " Creado Correctamente!!"]);
 }
 
 function modificarUsuario_estados()
@@ -57,16 +57,16 @@ function modificarUsuario_estados()
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['id_usuario_estado']) || !isset($data['descripcion'])) {
+    if (!isset($data['id_usuario_estado']) || !isset($data['permiso_nombre'])) {
         throw new Exception('Todos los campos son obligatorios');
     }
 
     $id_usuario_estado = $data['id_usuario_estado'];
-    $descripcion = $data['descripcion'];
+    $permiso_nombre = $data['permiso_nombre'];
 
 
-    $stmt = $pdo->prepare("UPDATE usuario_estados SET id_usuario_estado=?, descripcion=? WHERE id_usuario_estado=?");
-    $stmt->execute([$id_usuario_estado, $descripcion, $id_usuario_estado]);
+    $stmt = $pdo->prepare("UPDATE usuario_estados SET permiso_nombre=? WHERE id_usuario_estado=?");
+    $stmt->execute([$permiso_nombre, $id_usuario_estado]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado

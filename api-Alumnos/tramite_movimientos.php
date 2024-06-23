@@ -54,7 +54,7 @@ function crearTramite_movimientos()
 
     http_response_code(201); // Creado
 
-    echo json_encode(['mensaje' => "Movimieento de Tramite Nº " . $pdo->lastInsertId() . " Creado Correctamente!!"]);
+    echo json_encode(['mensaje' => " Creado Correctamente!!"]);
 }
 
 function modificarTramite_movimientos()
@@ -64,8 +64,8 @@ function modificarTramite_movimientos()
     $data = json_decode(file_get_contents('php://input'), true);
 
     if (
-        !isset($data['id_tramite']) || !isset($data['fecha_movimiento']) || !isset($data['id_usuario']) || !isset($data['observacion'])
-        || !isset($data['id_estado_tramite'])
+        !isset($data['id_tramite']) || !isset($data['fecha_movimiento']) || !isset($data['id_usuario']) 
+        || !isset($data['observacion']) || !isset($data['id_estado_tramite'])
     ) {
         throw new Exception('Todos los campos son obligatorios');
     }
@@ -76,9 +76,9 @@ function modificarTramite_movimientos()
     $observacion = $data['observacion'];
     $id_estado_tramite = $data['id_estado_tramite'];
 
-    $stmt = $pdo->prepare("UPDATE tramite_movimientos SET id_tramite=?, fecha_movimiento=?, id_usuario=?, 
-    observacion=?, id_estado_tramite=?)");
-    $stmt->execute([$id_tramite, $fecha_movimiento, $id_usuario, $observacion, $id_estado_tramite]);
+    $stmt = $pdo->prepare("UPDATE tramite_movimientos SET fecha_movimiento=?, id_usuario=?, 
+    observacion=?, id_estado_tramite=? WHERE id_tramite=?");
+    $stmt->execute([$fecha_movimiento, $id_usuario, $observacion, $id_estado_tramite, $id_tramite]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
@@ -134,26 +134,25 @@ FROM
   tramite_movimientos tm 
   INNER JOIN usuarios u ON tm.id_usuario = u.id_usuario 
   INNER JOIN tramite_estados te ON tm.id_estado_tramite = te.id_estado_tramite
-WHERE 
-  tm.id_tramite = tm.id_tramite  
+WHERE  1=1
+  AND tm.id_tramite = tm.id_tramite  
   AND u.id_usuario = tm.id_usuario 
-  AND te.id_estado_tramite = tm.id_estado_tramite 
-    WHERE 1=1";
+  AND te.id_estado_tramite = tm.id_estado_tramite";
 
     if ($id_tramite != null) {
-        $sql .= " AND id_tramite=$id_tramite";
+        $sql .= " AND tm.id_tramite=$id_tramite";
     }
     if ($fecha_movimiento != null) {
-        $sql .= " AND fecha_movimiento=$fecha_movimiento";
+        $sql .= " AND tm.fecha_movimiento=$fecha_movimiento";
     }
     if ($id_usuario != null) {
-        $sql .= " AND LOWER(id_usuario) like LOWER('%$id_usuario%')";
+        $sql .= " AND tm.id_usuario=$id_usuario";
     }
     if ($observacion != null) {
         $sql .= " AND LOWER(observacion) like LOWER('%$observacion%')";
     }
     if ($id_estado_tramite != null) {
-        $sql .= " AND LOWER(id_estado_tramite) like LOWER('%$id_estado_tramite%')";
+        $sql .= " AND te.id_estado_tramite=$id_estado_tramite";
     }
 
     $stmt = $pdo->prepare($sql);

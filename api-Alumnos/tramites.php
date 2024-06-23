@@ -37,8 +37,8 @@ function crearTramites()
 
     if (
         !isset($data['id_tramite']) || !isset($data['id_usuario_creacion']) || !isset($data['id_usuario_responsable'])
-        || !isset($data['id_tramite_tipo ']) || !isset($data['id_estado_tramite ']) || !isset($data['descripcion'])
-        || !isset($data['fecha_creacion'])
+        || !isset($data['id_tramite_tipo']) || !isset($data['id_estado_tramite']) || !isset($data['descripcion'])
+        
     ) {
         throw new Exception('Todos los campos son obligatorios');
     }
@@ -49,18 +49,18 @@ function crearTramites()
     $id_tramite_tipo = $data['id_tramite_tipo'];
     $id_estado_tramite = $data['id_estado_tramite'];
     $descripcion = $data['descripcion'];
-    $fecha_creacion = $data['fecha_creacion'];
+    $fecha_creacion = date("Y-m-d H:i:s");
 
     $stmt = $pdo->prepare("INSERT INTO tramites (id_tramite, id_usuario_creacion, id_usuario_responsable, id_tramite_tipo, 
     id_estado_tramite, descripcion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?, ?)");
     $stmt->execute([
-        $id_tramite, $id_usuario_creacion, $id_usuario_responsable, $id_tramite_tipo,, $id_estado_tramite,
+        $id_tramite, $id_usuario_creacion, $id_usuario_responsable, $id_tramite_tipo, $id_estado_tramite,
         $descripcion, $fecha_creacion
     ]);
 
     http_response_code(201); // Creado
 
-    echo json_encode(['mensaje' => "tramite Nº " . $pdo->lastInsertId() . " Creado Correctamente!!"]);
+    echo json_encode(['mensaje' => " Creado Correctamente!!"]);
 }
 
 function modificarTramites()
@@ -71,8 +71,7 @@ function modificarTramites()
 
     if (
         !isset($data['id_tramite']) || !isset($data['id_usuario_creacion']) || !isset($data['id_usuario_responsable'])
-        || !isset($data['id_tramite_tipo ']) || !isset($data['id_estado_tramite ']) || !isset($data['descripcion'])
-        || !isset($data['fecha_creacion'])
+        || !isset($data['id_tramite_tipo']) || !isset($data['id_estado_tramite']) || !isset($data['descripcion'])
     ) {
         throw new Exception('Todos los campos son obligatorios');
     }
@@ -83,7 +82,7 @@ function modificarTramites()
     $id_tramite_tipo = $data['id_tramite_tipo'];
     $id_estado_tramite = $data['id_estado_tramite'];
     $descripcion = $data['descripcion'];
-    $fecha_creacion = $data['fecha_creacion'];
+    $fecha_creacion = date("Y-m-d H:i:s");
 
     $stmt = $pdo->prepare("UPDATE tramites SET id_usuario_creacion=?, id_usuario_responsable=?, id_tramite_tipo=?,
     id_estado_tramite=?, descripcion=?, fecha_creacion=? WHERE id_tramite=?");
@@ -153,7 +152,7 @@ function listarTramites()
         1=1
     ";
 
-    if ($id_tramite  != null) {
+    if ($id_tramite != null) {
         $sql .= " AND id_tramite =$id_tramite ";
     }
     //se busca por descripcion y no por id

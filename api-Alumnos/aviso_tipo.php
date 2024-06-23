@@ -35,15 +35,15 @@ function crearAviso_tipo()
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['id_aviso_tipo ']) || !isset($data['descripcion'])) {
+    if (!isset($data['id_aviso_tipo']) || !isset($data['descripcion'])) {
         throw new Exception('Todos los campos son obligatorios');
     }
 
-    $id_aviso_tipo  = $data['id_aviso_tipo '];
+    $id_aviso_tipo  = $data['id_aviso_tipo'];
     $descripcion = $data['descripcion'];
 
 
-    $stmt = $pdo->prepare("INSERT INTO aviso_tipo (id_aviso_tipo , descripcion) VALUES (?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO aviso_tipo (id_aviso_tipo, descripcion) VALUES (?, ?)");
     $stmt->execute([$id_aviso_tipo, $descripcion]);
 
     http_response_code(201); // Creado
@@ -57,16 +57,16 @@ function modificarAviso_tipo()
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['id_aviso_tipo ']) || !isset($data['descripcion'])) {
+    if (!isset($data['id_aviso_tipo']) || !isset($data['descripcion'])) {
         throw new Exception('Todos los campos son obligatorios');
     }
 
-    $id_aviso_tipo  = $data['id_aviso_tipo '];
+    $id_aviso_tipo  = $data['id_aviso_tipo'];
     $descripcion = $data['descripcion'];
 
 
-    $stmt = $pdo->prepare("UPDATE aviso_tipo SET id_aviso_tipo =?, descripcion=? WHERE id_aviso_tipo =?");
-    $stmt->execute([$id_aviso_tipo, $descripcion, $id_aviso_tipo]);
+    $stmt = $pdo->prepare("UPDATE aviso_tipo SET descripcion=? WHERE id_aviso_tipo =?");
+    $stmt->execute([$descripcion, $id_aviso_tipo]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
@@ -84,13 +84,13 @@ function borrarAviso_tipo()
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (!isset($data['id_aviso_tipo '])) {
+    if (!isset($data['id_aviso_tipo'])) {
         throw new Exception('Todos los campos son obligatorios');
     }
 
-    $id_aviso_tipo  = $data['id_aviso_tipo '];
+    $id_aviso_tipo  = $data['id_aviso_tipo'];
 
-    $stmt = $pdo->prepare("DELETE FROM aviso_tipo WHERE id_aviso_tipo =?");
+    $stmt = $pdo->prepare("DELETE FROM aviso_tipo WHERE id_aviso_tipo=?");
     $stmt->execute([$id_aviso_tipo]);
 
     if ($stmt->rowCount() === 0) {
@@ -107,7 +107,7 @@ function listarAviso_tipo()
 {
     global $pdo;
 
-    $id_aviso_tipo  = isset($_GET['id_aviso_tipo ']) ? (int)$_GET['id_aviso_tipo '] : null;
+    $id_aviso_tipo = isset($_GET['id_aviso_tipo']) ? (int)$_GET['id_aviso_tipo'] : null;
     $descripcion = isset($_GET['descripcion']) ? $_GET['descripcion'] : null;
 
     $sql = "SELECT * 
@@ -115,7 +115,7 @@ function listarAviso_tipo()
     WHERE 1=1";
 
     if ($id_aviso_tipo  != null) {
-        $sql .= " AND id_aviso_tipo =$id_aviso_tipo ";
+        $sql .= " AND id_aviso_tipo=$id_aviso_tipo ";
     }
     if ($descripcion != null) {
         $sql .= " AND LOWER(descripcion) like LOWER('%$descripcion%')";
