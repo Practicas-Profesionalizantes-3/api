@@ -14,9 +14,6 @@ try {
     case 'GET':
       listarUsuarios();
       break;
-    case 'POST':
-      iniciarSesion();
-      break;
     case 'PUT':
       modificarUsuario();
       break;
@@ -33,39 +30,6 @@ try {
 } catch (Exception $e) {
   http_response_code(400); // Solicitud incorrecta
   echo json_encode(['error' => $e->getMessage()]);
-}
-
-function iniciarSesion()
-{
-  global $pdo;
-  $data = json_decode(file_get_contents('php://input'), true);
-
-  if (!isset($data['user']) || !isset($data['password'])) {
-    echo json_encode("Usuario o contraseña no ingresados");
-    return;
-  }
-
-  $email = $data['user'];
-  $password = $data['password'];
-
-  $stmt = $pdo->prepare("SELECT password FROM usuarios WHERE email=?");
-  $stmt->execute([$email]);
-  $hashed_password = $stmt->fetchColumn();
-
-  if (password_verify($password, $hashed_password)) {
-    $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email=?");
-    $stmt->execute([$email]);
-    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($usuario) {
-      session_start();
-      echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true, "data" => json_encode($usuario)]);
-    } else {
-      echo json_encode(["success" => false, 'error' => "Usuario o contraseña incorrectos", 'codigo' => 401]);
-    }
-  } else {
-    echo json_encode(["success" => false, 'error' => "Usuario o contraseña incorrectos", 'codigo' => 401]);
-  }
 }
 
 function altaUsuario()
