@@ -12,16 +12,7 @@ header("Access-Control-Allow-Headers: X-Requested-With");
 try {
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'GET':
-            $action = isset($_GET['action']) ? $_GET['action'] : '';
-            switch ($action) {
-                case 'aviso_tipos':
-                    listarAvisoTipos();
-                    break;
-                    // Agrega más casos para otras acciones GET
-                default:
-                    listarAvisos();
-                    break;
-            }
+            listarAvisos();
             break;
         case 'POST':
             crearAviso();
@@ -49,20 +40,18 @@ function crearAviso()
     global $pdo;
 
     // Verifica si se ha enviado un archivo
-    if ($_FILES['imagen']['error'] != UPLOAD_ERR_OK) {
-        echo json_encode(["mensaje" => "Error en la subida de la imagen"]);
-        return;
-    }
-    if ($_FILES['adjunto']['error'] != UPLOAD_ERR_OK) {
-        echo json_encode(["mensaje" => "Error en la subida del archivo"]);
-        return;
-    }
-
-    // Lee el contenido del archivo
-    if (isset($_FILES['imagen'])) {
+    if (!isset($_FILES['imagen']) || $_FILES['imagen']['error'] != UPLOAD_ERR_OK) {
+        $file_content = null;
+    } else {
+        // Lee el contenido del archivo 'imagen'
         $file_content = file_get_contents($_FILES['imagen']['tmp_name']);
     }
-    if (isset($_FILES['adjunto'])) {
+
+    // Verifica si se ha enviado un archivo con el nombre 'adjunto'
+    if (!isset($_FILES['adjunto']) || $_FILES['adjunto']['error'] != UPLOAD_ERR_OK) {
+        $file_content_adjunto = null;
+    } else {
+        // Lee el contenido del archivo 'adjunto'
         $file_content_adjunto = file_get_contents($_FILES['adjunto']['tmp_name']);
     }
 
@@ -94,21 +83,7 @@ function crearAviso()
 function modificarAviso()
 {
     global $pdo;
-    $data = array();
     $data = json_decode(file_get_contents('php://input'), true);
-    $adjuntoBlob = null;
-    $imagenBlob = null;
-    if (isset($data['adjunto']) && isset($data['imagen'])) {
-        $adjuntoBase64 = $data['adjunto'];
-        $imagenBase64 = $data['imagen'];
-        
-        // Convertir base64 a binario (blob)
-        $adjuntoBlob = base64_decode($adjuntoBase64);
-        $imagenBlob = base64_decode($imagenBase64);
-    }
-
-
-    // Leer los datos del cuerpo de la solicitud
 
     // Asegurar que el id_aviso esté presente
     if (!isset($data['id_aviso'])) {
@@ -116,27 +91,42 @@ function modificarAviso()
         return;
     }
 
-    // Asignar variables con verificación de existencia
     $id_aviso = $data['id_aviso'];
-    $id_aviso_tipo = isset($data['id_aviso_tipo']) ? $data['id_aviso_tipo'] : null;
-    $id_usuario = isset($data['id_usuario']) ? $data['id_usuario'] : null;
-    $titulo = isset($data['titulo']) ? $data['titulo'] : null;
-    $descripcion = isset($data['descripcion']) ? $data['descripcion'] : null;
-    $fecha_publicacion = isset($data['fecha_publicacion']) ? $data['fecha_publicacion'] : null;
-    $fecha_vencimiento = isset($data['fecha_vencimiento']) ? $data['fecha_vencimiento'] : null;
-    $fijado = isset($data['fijado']) ? $data['fijado'] : null;
-    $estado = isset($data['id_aviso_estado']) ? $data['id_aviso_estado'] : null;
 
-    $stmt = $pdo->prepare("UPDATE avisos SET id_aviso_tipo=?, id_usuario=?, titulo=?, descripcion=?, fecha_publicacion=?, fecha_vencimiento=?, adjunto=?, fijado=?, imagen=?, id_aviso_estado=? WHERE id_aviso=?");
-    $stmt->execute([$id_aviso_tipo, $id_usuario, $titulo, $descripcion, $fecha_publicacion, $fecha_vencimiento, $adjuntoBlob, $fijado, $imagenBlob, $estado, $id_aviso]);
+    try {
+        // Verificar si el aviso existe
+        $stmt = $pdo->prepare("SELECT id_aviso FROM avisos WHERE id_aviso = ?");
+        $stmt->execute([$id_aviso]);
 
-    if ($stmt->rowCount() === 0) {
-        http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'Aviso no encontrado']);
-        return;
+        if ($stmt->rowCount() === 0) {
+            http_response_code(404); // No encontrado
+            echo json_encode(['error' => 'Aviso no encontrado']);
+            return;
+        }
+
+        // Convertir base64 a binario (blob) si están presentes
+        $adjuntoBlob = isset($data['adjunto']) ? base64_decode($data['adjunto']) : null;
+        $imagenBlob = isset($data['imagen']) ? base64_decode($data['imagen']) : null;
+
+        // Asignar variables con verificación de existencia
+        $id_aviso_tipo = $data['id_aviso_tipo'] ?? null;
+        $id_usuario = $data['id_usuario'] ?? null;
+        $titulo = $data['titulo'] ?? null;
+        $descripcion = $data['descripcion'] ?? null;
+        $fecha_publicacion = $data['fecha_publicacion'] ?? null;
+        $fecha_vencimiento = $data['fecha_vencimiento'] ?? null;
+        $fijado = $data['fijado'] ?? null;
+        $estado = $data['id_aviso_estado'] ?? null;
+
+        // Preparar y ejecutar la consulta de actualización
+        $stmt = $pdo->prepare("UPDATE avisos SET id_aviso_tipo=?, id_usuario=?, titulo=?, descripcion=?, fecha_publicacion=?, fecha_vencimiento=?, adjunto=?, fijado=?, imagen=?, id_aviso_estado=? WHERE id_aviso=?");
+        $stmt->execute([$id_aviso_tipo, $id_usuario, $titulo, $descripcion, $fecha_publicacion, $fecha_vencimiento, $adjuntoBlob, $fijado, $imagenBlob, $estado, $id_aviso]);
+
+        echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true, "mensaje" => "Aviso modificado correctamente!"]);
+    } catch (Exception $e) {
+        http_response_code(500); // Error interno del servidor
+        echo json_encode(["codigo" => 500, "error" => "Error en la actualización", "success" => false, "mensaje" => $e->getMessage()]);
     }
-
-    echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true, "mensaje" => "Aviso modificado correctamente!"]);
 }
 
 

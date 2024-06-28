@@ -107,29 +107,23 @@ function listarAviso_tipo()
 {
     global $pdo;
 
-    $id_aviso_tipo = isset($_GET['id_aviso_tipo']) ? (int)$_GET['id_aviso_tipo'] : null;
-    $descripcion = isset($_GET['descripcion']) ? $_GET['descripcion'] : null;
-
-    $sql = "SELECT * 
-    FROM aviso_tipo 
-    WHERE 1=1";
-
-    if ($id_aviso_tipo  != null) {
-        $sql .= " AND id_aviso_tipo=$id_aviso_tipo ";
-    }
-    if ($descripcion != null) {
-        $sql .= " AND LOWER(descripcion) like LOWER('%$descripcion%')";
-    }
+    $sql = "SELECT 
+        a.id_aviso_tipo,
+        a.descripcion
+        FROM 
+        aviso_tipo as a
+        WHERE 
+        1=1";
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
-    $aviso_tipo = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $cartelera = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if (!$aviso_tipo) {
+    if (!$cartelera) {
         http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'No se encontraron Tipo de Aviso']);
+        echo json_encode(['error' => 'No se encontraron tipos de cartelera']);
         return;
     }
 
-    echo json_encode($aviso_tipo);
+    echo json_encode($cartelera);
 }

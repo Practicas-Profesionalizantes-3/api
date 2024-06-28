@@ -26,34 +26,6 @@ try {
     echo json_encode(['error' => $e->getMessage()]);
 }
 
-<?php
-require 'config.php';
-
-header('Content-Type: application/json');
-
-header('Access-Control-Allow-Origin: *');
-
-header('Access-Control-Allow-Methods: GET, POST');
-
-header("Access-Control-Allow-Headers: X-Requested-With");
-
-try {
-    switch ($_SERVER['REQUEST_METHOD']) {
-        case 'POST':
-            iniciarSesion();
-            break;
-        default:
-            http_response_code(405); // Método no permitido
-            echo json_encode(['error' => 'Método no permitido']);
-    }
-} catch (PDOException $e) {
-    http_response_code(500); // Error del servidor
-    echo json_encode(['error' => 'Error en la base de datos: ' . $e->getMessage()]);
-} catch (Exception $e) {
-    http_response_code(400); // Solicitud incorrecta
-    echo json_encode(['error' => $e->getMessage()]);
-}
-
 function iniciarSesion()
 {
     global $pdo;
