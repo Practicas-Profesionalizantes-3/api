@@ -215,21 +215,24 @@ function listarUsuarios()
   $id_documento_tipo = isset($_GET['id_documento_tipo']) ? $_GET['id_documento_tipo'] : null;
   $id_usuario_estado = isset($_GET['id_usuario_estado']) ? (int) $_GET['id_usuario_estado'] : null;
   $numero_documento = isset($_GET['numero_documento']) ? $_GET['numero_documento'] : null;
-
+  $permiso_nombre = isset($_GET['permiso_nombre']) ? $_GET['permiso_nombre'] : null;
   $sql = "SELECT
-        u.id_usuario,
-        u.nombre,
-        u.apellido,
-        u.email,
-        dt.descripcion AS documento_tipo,
-        ue.descripcion AS usuario_estado,
-        u.numero_documento
+    u.id_usuario,
+    u.nombre,
+    u.apellido,
+    u.email,
+    dt.descripcion AS documento_tipo,
+    ue.descripcion AS usuario_estado,
+    u.numero_documento,
+    ut.permiso_nombre
       FROM
-        usuarios AS u
-        INNER JOIN documento_tipos AS dt ON u.id_documento_tipo = dt.id_documento_tipo
-        INNER JOIN usuario_estados AS ue ON u.id_usuario_estado = ue.id_usuario_estado
+          usuarios AS u
+      INNER JOIN documento_tipos AS dt ON u.id_documento_tipo = dt.id_documento_tipo
+      INNER JOIN usuario_estados AS ue ON u.id_usuario_estado = ue.id_usuario_estado
+      LEFT JOIN usuario_roles AS ur ON u.id_usuario = ur.id_usuario
+      LEFT JOIN usuario_tipos AS ut ON ur.id_usuario_tipo = ut.id_usuario_tipo
       WHERE
-        1=1";
+          1=1;";
 
   if ($id_usuario != null) {
     $sql .= " AND u.id_usuario=$id_usuario";
@@ -251,6 +254,9 @@ function listarUsuarios()
   }
   if ($numero_documento != null) {
     $sql .= " AND u.numero_documento=$numero_documento";
+  }
+  if ($permiso_nombre != null) {
+    $sql .= " AND LOWER(u.permiso_nombre) like LOWER('%$permiso_nombre%')";
   }
 
   $stmt = $pdo->prepare($sql);
