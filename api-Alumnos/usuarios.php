@@ -15,7 +15,7 @@ try {
       listarUsuarios();
       break;
     case 'POST':
-      iniciarSesion();
+      altaUsuario();
       break;
     case 'PUT':
       modificarUsuario();
@@ -35,39 +35,6 @@ try {
   echo json_encode(['error' => $e->getMessage()]);
 }
 
-function iniciarSesion()
-{
-  global $pdo;
-  $data = json_decode(file_get_contents('php://input'), true);
-
-  if (!isset($data['user']) || !isset($data['password'])) {
-    echo json_encode("Usuario o contraseña no ingresados");
-    return;
-  }
-
-  $email = $data['user'];
-  $password = $data['password'];
-
-  $stmt = $pdo->prepare("SELECT password FROM usuarios WHERE email=?");
-  $stmt->execute([$email]);
-  $hashed_password = $stmt->fetchColumn();
-
-  if (password_verify($password, $hashed_password)) {
-    $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email=?");
-    $stmt->execute([$email]);
-    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($usuario) {
-      session_start();
-      echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true, "data" => json_encode($usuario)]);
-    } else {
-      echo json_encode(["success" => false, 'error' => "Usuario o contraseña incorrectos", 'codigo' => 401]);
-    }
-  } else {
-    echo json_encode(["success" => false, 'error' => "Usuario o contraseña incorrectos", 'codigo' => 401]);
-  }
-}
-
 function altaUsuario()
 {
   global $pdo;
@@ -76,8 +43,8 @@ function altaUsuario()
 
   if (
     !isset($data['nombre']) || !isset($data['apellido']) || !isset($data['password']) ||
-    !isset($data['email']) || !isset($data['id_documento_tipo']) || !isset($data['id_usuario_estado']) || !isset($data['numero_documento'])
-    || !isset($data['id_carrera']) || !isset($data['anio']) || !isset($data['comision']) || !isset($data['id_usuario_tipo'])
+    !isset($data['email']) || !isset($data['id_documento_tipo']) || !isset($data['id_usuario_estado']) || 
+    !isset($data['numero_documento']) || !isset($data['carreras']) || !isset($data['id_usuario_tipo'])
   ) {
     throw new Exception('Todos los campos son obligatorios');
   }
@@ -90,9 +57,7 @@ function altaUsuario()
   $id_documento_tipo = $data['id_documento_tipo'];
   $id_usuario_estado = $data['id_usuario_estado'];
   $numero_documento = $data['numero_documento'];
-  $id_carrera = $data['id_carrera'];
-  $anio = $data['anio'];
-  $comision = $data['comision'];
+  $carreras = $data['carreras']; // Debe ser un array con los datos de cada carrera
   $id_usuario_tipo = $data['id_usuario_tipo'];
 
 
@@ -106,23 +71,44 @@ function altaUsuario()
     echo json_encode(['mensaje' => 'Correo existente']);
   } else {
     if (preg_match('/^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/', $password)) {
+      // Se guarda la contraseña hash en $password
       $password = password_hash($data['password'], PASSWORD_DEFAULT);
 
-      $stmt = $pdo->prepare("INSERT INTO usuarios (nombre, apellido, password, email, id_documento_tipo, id_usuario_estado, numero_documento) VALUES (?, ?, ?, ?, ?, ?, ?)");
-      $stmt->execute([$nombre, $apellido, $password, $email, $id_documento_tipo, $id_usuario_estado, $numero_documento]);
-
-      $id_usuario = $pdo->lastInsertId();
-
-      foreach ($id_usuario_tipo as $key => $value) {
-        $stmt = $pdo->prepare("INSERT INTO usuario_roles (id_usuario, id_usuario_tipo) VALUES (?, ?)");
-        $stmt->execute([$id_usuario, $value]);
+      // Verificar si $id_usuario_tipo es un array y tiene elementos
+      if (is_array($id_usuario_tipo) && !empty($id_usuario_tipo)) {
+        // Verificar si $carreras es un array y tiene elementos
+        if (is_array($carreras) && !empty($carreras)){
+          $stmt = $pdo->prepare("INSERT INTO usuarios (nombre, apellido, password, email, id_documento_tipo, id_usuario_estado, numero_documento) VALUES (?, ?, ?, ?, ?, ?, ?)");
+          $stmt->execute([$nombre, $apellido, $password, $email, $id_documento_tipo, $id_usuario_estado, $numero_documento]);
+  
+          $id_usuario = $pdo->lastInsertId();
+  
+          //Inserta el nuevo rol o roles del usuario
+          $stmt = $pdo->prepare("INSERT INTO usuario_roles (id_usuario, id_usuario_tipo) VALUES (?, ?)");
+          foreach ($id_usuario_tipo as $tipo) {
+              // Verificar si $tipo es un valor válido
+              if (!empty($tipo)) {
+                  $stmt->execute([$id_usuario, $tipo]);
+              }
+          }
+          // Inserta las carreras del usuario
+          $stmt = $pdo->prepare("INSERT INTO usuario_carreras (id_usuario, id_carrera, anio, comision) VALUES (?, ?, ?, ?)");
+          foreach ($carreras as $carrera) {
+              if (isset($carrera['id_carrera']) && isset($carrera['anio']) && isset($carrera['comision'])) {
+                  $stmt->execute([$id_usuario, $carrera['id_carrera'], $carrera['anio'], $carrera['comision']]);
+              }
+          }
+          
+          http_response_code(201); // Creado
+          echo json_encode(['mensaje' => 'Usuario creado correctamente!']);
+        } else{
+          http_response_code(400); // Código de estado HTTP para una solicitud incorrecta
+          echo json_encode(['error' => 'El valor en carreras tiene que estar entre corchetes []']);
+        }
+      }else{
+        http_response_code(400); // Código de estado HTTP para una solicitud incorrecta
+        echo json_encode(['error' => 'El valor en id_usuario_tipo tiene que estar entre corchetes []']);
       }
-
-      $stmt = $pdo->prepare("INSERT INTO usuario_carreras (id_usuario, id_carrera, anio, comision) VALUES (?, ?, ?, ?)");
-      $stmt->execute([$id_usuario, $id_carrera, $anio, $comision]);
-
-      http_response_code(201); // Creado
-      echo json_encode(['mensaje' => 'Usuario creado correctamente!']);
     } else {
       http_response_code(406);
       echo json_encode(['mensaje' => 'El password debe tenes una letra mayuscula y al menos un numero!']);
@@ -137,46 +123,75 @@ function modificarUsuario()
   $data = json_decode(file_get_contents('php://input'), true);
 
   if (
-    !isset($data['id_usuario']) || !isset($data['nombre']) || !isset($data['apellido']) ||
-    !isset($data['email']) || !isset($data['id_documento_tipo']) || !isset($data['id_usuario_estado']) || !isset($data['numero_documento'])
-    || !isset($data['id_carrera']) || !isset($data['anio']) || !isset($data['comision']) || !isset($data['id_usuario_tipo'])
+      !isset($data['id_usuario']) || !isset($data['nombre']) || !isset($data['apellido']) ||
+      !isset($data['password']) || !isset($data['email']) || !isset($data['id_documento_tipo']) || 
+      !isset($data['id_usuario_estado'])|| !isset($data['numero_documento'])
+      || !isset($data['carreras']) || !isset($data['id_usuario_tipo'])
   ) {
     throw new Exception('Todos los campos son obligatorios');
   }
-
+  
   $id_usuario = $data['id_usuario'];
   $nombre = $data['nombre'];
   $apellido = $data['apellido'];
+  $password = $data['password'];
   $email = $data['email'];
   $id_documento_tipo = $data['id_documento_tipo'];
   $id_usuario_estado = $data['id_usuario_estado'];
   $numero_documento = $data['numero_documento'];
-  $id_carrera = $data['id_carrera'];
-  $anio = $data['anio'];
-  $comision = $data['comision'];
+  $carreras = $data['carreras'];
   $id_usuario_tipo = $data['id_usuario_tipo'];
 
-  $stmt = $pdo->prepare("UPDATE usuarios SET nombre=?, apellido=?, email=?, id_documento_tipo=?, id_usuario_estado=?, numero_documento=? WHERE id_usuario=?");
-  $stmt->execute([$nombre, $apellido, $email, $id_documento_tipo, $id_usuario_estado, $numero_documento, $id_usuario]);
+  if (preg_match('/^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/', $password)) {
+    // Se guarda la contraseña hash en $password
+    $password = password_hash($data['password'], PASSWORD_DEFAULT);
 
-  $stmt = $pdo->prepare("DELETE FROM usuario_roles WHERE id_usuario=?");
-  $stmt->execute([$id_usuario]);
+    // Verificar si $id_usuario_tipo es un array y tiene elementos
+    if (is_array($id_usuario_tipo) && !empty($id_usuario_tipo)) {
+      if (is_array($carreras) && !empty($carreras)){
+        //Modifica los campos de la tabla usuarios
+        $stmt = $pdo->prepare("UPDATE usuarios SET nombre=?, apellido=?, email=?, password=?, id_documento_tipo=?, id_usuario_estado=?, numero_documento=? WHERE id_usuario=?");
+        $stmt->execute([$nombre, $apellido, $email, $password, $id_documento_tipo, $id_usuario_estado, $numero_documento, $id_usuario]);
+        
+        //Elimina los usuarios_roles que tenia antes
+        $stmt = $pdo->prepare("DELETE FROM usuario_roles WHERE id_usuario=?");
+        $stmt->execute([$id_usuario]);
 
-  foreach ($id_usuario_tipo as $key => $value) {
-    $stmt = $pdo->prepare("INSERT INTO usuario_roles (id_usuario, id_usuario_tipo) VALUES (?, ?)");
-    $stmt->execute([$id_usuario, $value]);
+        //Inserta el nuevo rol o roles del usuario
+        $stmt = $pdo->prepare("INSERT INTO usuario_roles (id_usuario, id_usuario_tipo) VALUES (?, ?)");
+        foreach ($id_usuario_tipo as $tipo) {
+            // Verificar si $tipo es un valor válido
+            if (!empty($tipo)) {
+                $stmt->execute([$id_usuario, $tipo]);
+            }
+        }
+
+        //Elimina los usuario_carreras que tenia antes
+        $stmt = $pdo->prepare("DELETE FROM usuario_carreras WHERE id_usuario=?");
+        $stmt->execute([$id_usuario]);
+
+        // Inserta las carreras del usuario
+        $stmt = $pdo->prepare("INSERT INTO usuario_carreras (id_usuario, id_carrera, anio, comision) VALUES (?, ?, ?, ?)");
+        foreach ($carreras as $carrera) {
+            if (isset($carrera['id_carrera']) && isset($carrera['anio']) && isset($carrera['comision'])) {
+                $stmt->execute([$id_usuario, $carrera['id_carrera'], $carrera['anio'], $carrera['comision']]);
+            }
+        }
+
+        echo json_encode(['mensaje' => 'El usuario fue modificado exitosamente!']);
+      } else{
+        http_response_code(400); // Código de estado HTTP para una solicitud incorrecta
+        echo json_encode(['error' => 'El valor en carreras tiene que estar entre corchetes []']);
+      }
+    } else{
+      http_response_code(406);
+      echo json_encode(['error' => 'El valor en id_usuario_tipo tiene que estar entre corchetes []']);
+    }
+  }else {
+    http_response_code(406);
+    echo json_encode(['error' => 'El password debe tenes una letra mayuscula y al menos un numero!']);
   }
 
-  $stmt = $pdo->prepare("UPDATE usuario_carreras SET id_carrera=?, anio=?, comision=? WHERE id_usuario=?");
-  $stmt->execute([$id_carrera, $anio, $comision, $id_usuario]);
-
-  if ($stmt->rowCount() === 0) {
-    http_response_code(404); // No encontrado
-    echo json_encode(['error' => 'Usuario modificado correctamente!']);
-    return;
-  }
-
-  echo json_encode(['mensaje' => 'Usuario modificado correctamente!']);
 }
 
 
@@ -212,28 +227,36 @@ function listarUsuarios()
   $nombre = isset($_GET['nombre']) ? $_GET['nombre'] : null;
   $apellido = isset($_GET['apellido']) ? $_GET['apellido'] : null;
   $email = isset($_GET['email']) ? $_GET['email'] : null;
+  $password = isset($_GET['password']) ? $_GET['password'] : null;
   $id_documento_tipo = isset($_GET['id_documento_tipo']) ? $_GET['id_documento_tipo'] : null;
   $id_usuario_estado = isset($_GET['id_usuario_estado']) ? (int) $_GET['id_usuario_estado'] : null;
   $numero_documento = isset($_GET['numero_documento']) ? $_GET['numero_documento'] : null;
-  $permiso_nombre = isset($_GET['permiso_nombre']) ? $_GET['permiso_nombre'] : null;
-  $sql = "SELECT
-    u.id_usuario,
-    u.nombre,
-    u.apellido,
-    u.email,
-    dt.descripcion AS documento_tipo,
-    ue.descripcion AS usuario_estado,
-    u.numero_documento,
-    ut.permiso_nombre
-      FROM
-          usuarios AS u
-      INNER JOIN documento_tipos AS dt ON u.id_documento_tipo = dt.id_documento_tipo
-      INNER JOIN usuario_estados AS ue ON u.id_usuario_estado = ue.id_usuario_estado
-      LEFT JOIN usuario_roles AS ur ON u.id_usuario = ur.id_usuario
-      LEFT JOIN usuario_tipos AS ut ON ur.id_usuario_tipo = ut.id_usuario_tipo
-      WHERE
-          1=1;";
+ 
 
+  $sql = "SELECT
+        u.id_usuario,
+        u.nombre,
+        u.apellido,
+        u.email,
+        u.password,
+        dt.descripcion AS documento_tipo,
+        ue.descripcion AS usuario_estado,
+        u.numero_documento,
+        c.descripcion AS carrera,
+        uc.anio,
+        uc.comision,
+        ut.descripcion AS rol_usuario
+      FROM
+        usuarios AS u
+        INNER JOIN documento_tipos AS dt ON u.id_documento_tipo = dt.id_documento_tipo
+        INNER JOIN usuario_estados AS ue ON u.id_usuario_estado = ue.id_usuario_estado
+        INNER JOIN usuario_carreras AS uc ON u.id_usuario = uc.id_usuario 
+        INNER JOIN carreras AS c ON uc.id_carrera = c.id_carrera  
+        INNER JOIN usuario_roles AS ur ON u.id_usuario = ur.id_usuario
+        INNER JOIN usuario_tipos AS ut ON ur.id_usuario_tipo = ut.id_usuario_tipo
+
+      WHERE
+        1=1";
   if ($id_usuario != null) {
     $sql .= " AND u.id_usuario=$id_usuario";
   }
@@ -254,9 +277,6 @@ function listarUsuarios()
   }
   if ($numero_documento != null) {
     $sql .= " AND u.numero_documento=$numero_documento";
-  }
-  if ($permiso_nombre != null) {
-    $sql .= " AND LOWER(u.permiso_nombre) like LOWER('%$permiso_nombre%')";
   }
 
   $stmt = $pdo->prepare($sql);

@@ -14,6 +14,9 @@ try {
         case 'POST':
             iniciarSesion();
             break;
+            case 'PUT':
+            modificarUsuario();
+            break;
         default:
             http_response_code(405); // Método no permitido
             echo json_encode(['error' => 'Método no permitido']);
@@ -57,4 +60,29 @@ function iniciarSesion()
     } else {
         echo json_encode(["success" => false, 'error' => "Usuario o contraseña incorrectos", 'codigo' => 401]);
     }
+}
+
+function modificarUsuario()
+{
+    global $pdo;
+
+    $data = json_decode(file_get_contents('php://input'), true);
+
+    $id_usuario = $data['id_usuario'];
+    $password = $data['password'];
+
+    if (preg_match('/^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/', $password)) {
+       $password = password_hash($data['password'], PASSWORD_DEFAULT);
+
+       $stmt = $pdo->prepare("UPDATE usuarios SET password=? WHERE id_usuario=?");
+       $stmt->execute([$password, $id_usuario]);
+    }
+
+    if ($stmt->rowCount() === 0) {
+        http_response_code(404); // No encontrado
+        echo json_encode(['error' => 'Usuario no encontrado']);
+        return;
+    }
+
+    echo json_encode(['mensaje' => 'Usuario modificado Con Exito!']);
 }
