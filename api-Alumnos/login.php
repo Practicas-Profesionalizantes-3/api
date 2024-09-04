@@ -70,7 +70,21 @@ function modificarUsuario()
 
     $id_usuario = $data['id_usuario'];
     $password = $data['password'];
+    $current_password = $data['current_password'];
 
+     // Obtener la contraseña actual almacenada en la base de datos
+     $stmt = $pdo->prepare("SELECT password FROM usuarios WHERE id_usuario=?");
+     $stmt->execute([$id_usuario]);
+     $hashed_password = $stmt->fetchColumn();
+ 
+     // Verificar que la contraseña actual sea correcta
+     if (!password_verify($current_password, $hashed_password)) {
+         http_response_code(401); // No autorizado
+         echo json_encode(['error' => 'Contraseña actual incorrecta']);
+         return;
+     }
+    
+    // Verificar que la nueva contraseña cumpla con el patrón
     if (preg_match('/^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/', $password)) {
        $password = password_hash($data['password'], PASSWORD_DEFAULT);
 
