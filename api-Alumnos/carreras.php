@@ -3,6 +3,12 @@ require 'config.php';
 
 header('Content-Type: application/json');
 
+header('Access-Control-Allow-Origin: *');
+
+header('Access-Control-Allow-Methods: GET');
+
+header("Access-Control-Allow-Headers: *");
+
 try {
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'GET':

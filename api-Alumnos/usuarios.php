@@ -5,9 +5,9 @@ header('Content-Type: application/json');
 
 header('Access-Control-Allow-Origin: *');
 
-header('Access-Control-Allow-Methods: GET, POST');
+header('Access-Control-Allow-Methods: GET, POST, DELETE');
 
-header("Access-Control-Allow-Headers: X-Requested-With");
+header("Access-Control-Allow-Headers: *");
 
 try {
   switch ($_SERVER['REQUEST_METHOD']) {
@@ -15,7 +15,7 @@ try {
       listarUsuarios();
       break;
     case 'POST':
-      iniciarSesion();
+      altaUsuario();
       break;
     case 'PUT':
       modificarUsuario();
@@ -113,16 +113,15 @@ function altaUsuario()
 
       $id_usuario = $pdo->lastInsertId();
 
-      foreach ($id_usuario_tipo as $key => $value) {
-        $stmt = $pdo->prepare("INSERT INTO usuario_roles (id_usuario, id_usuario_tipo) VALUES (?, ?)");
-        $stmt->execute([$id_usuario, $value]);
-      }
+      $stmt = $pdo->prepare("INSERT INTO usuario_roles (id_usuario, id_usuario_tipo) VALUES (?, ?)");
+      $stmt->execute([$id_usuario, $id_usuario_tipo]);
 
       $stmt = $pdo->prepare("INSERT INTO usuario_carreras (id_usuario, id_carrera, anio, comision) VALUES (?, ?, ?, ?)");
       $stmt->execute([$id_usuario, $id_carrera, $anio, $comision]);
 
       http_response_code(201); // Creado
-      echo json_encode(['mensaje' => 'Usuario creado correctamente!']);
+      echo json_encode(["codigo" => 201, "error" => "No hay error", "success" => true, "mensaje" => "Usuario creado con exito!"]);
+      return;
     } else {
       http_response_code(406);
       echo json_encode(['mensaje' => 'El password debe tenes una letra mayuscula y al menos un numero!']);
@@ -156,27 +155,25 @@ function modificarUsuario()
   $comision = $data['comision'];
   $id_usuario_tipo = $data['id_usuario_tipo'];
 
-  $stmt = $pdo->prepare("UPDATE usuarios SET nombre=?, apellido=?, email=?, id_documento_tipo=?, id_usuario_estado=?, numero_documento=? WHERE id_usuario=?");
-  $stmt->execute([$nombre, $apellido, $email, $id_documento_tipo, $id_usuario_estado, $numero_documento, $id_usuario]);
+  $stmt1 = $pdo->prepare("UPDATE usuarios SET nombre=?, apellido=?, email=?, id_documento_tipo=?, id_usuario_estado=?, numero_documento=? WHERE id_usuario=?");
+  $stmt1->execute([$nombre, $apellido, $email, $id_documento_tipo, $id_usuario_estado, $numero_documento, $id_usuario]);
 
-  $stmt = $pdo->prepare("DELETE FROM usuario_roles WHERE id_usuario=?");
-  $stmt->execute([$id_usuario]);
+  $stmt2 = $pdo->prepare("DELETE FROM usuario_roles WHERE id_usuario=?");
+  $stmt2->execute([$id_usuario]);
 
-  foreach ($id_usuario_tipo as $key => $value) {
-    $stmt = $pdo->prepare("INSERT INTO usuario_roles (id_usuario, id_usuario_tipo) VALUES (?, ?)");
-    $stmt->execute([$id_usuario, $value]);
-  }
+  $stmt3 = $pdo->prepare("INSERT INTO usuario_roles (id_usuario, id_usuario_tipo) VALUES (?, ?)");
+  $stmt3->execute([$id_usuario, $id_usuario_tipo]);
 
-  $stmt = $pdo->prepare("UPDATE usuario_carreras SET id_carrera=?, anio=?, comision=? WHERE id_usuario=?");
-  $stmt->execute([$id_carrera, $anio, $comision, $id_usuario]);
+  $stmt4 = $pdo->prepare("UPDATE usuario_carreras SET id_carrera=?, anio=?, comision=? WHERE id_usuario=?");
+  $stmt4->execute([$id_carrera, $anio, $comision, $id_usuario]);
 
-  if ($stmt->rowCount() === 0) {
+  if ($stmt1->rowCount() === 0 && $stmt2->rowCount() === 0 && $stmt3->rowCount() === 0 && $stmt4->rowCount() === 0) {
     http_response_code(404); // No encontrado
-    echo json_encode(['error' => 'Usuario modificado correctamente!']);
+    echo json_encode(["codigo" => 404, "error" => "Usuario no encontrado", "success" => false, "mensaje" => "No se pudo modificar el usuario"]);
     return;
   }
 
-  echo json_encode(['mensaje' => 'Usuario modificado correctamente!']);
+  echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true, "mensaje" => "Usuario modificado con exito!"]);
 }
 
 
@@ -186,22 +183,22 @@ function bajaUsuario()
 
   $data = json_decode(file_get_contents('php://input'), true);
 
-  if (!isset($data['numero_documento'])) {
+  if (!isset($data['id_usuario'])) {
     throw new Exception('Todos los campos son obligatorios');
   }
 
-  $id_usuario = isset($_GET['id_usuario']) ? (int) $_GET['id_usuario'] : null;
+  $id_usuario = $data['id_usuario'];
 
-  $stmt = $pdo->prepare("UPDATE usuarios SET id_usuario_estado = '2' WHERE id_usuario=?");
+  $stmt = $pdo->prepare("UPDATE usuarios SET usuarios.id_usuario_estado=2 WHERE usuarios.id_usuario=?");
   $stmt->execute([$id_usuario]);
 
   if ($stmt->rowCount() === 0) {
     http_response_code(404); // No encontrado
-    echo json_encode(['error' => 'Usuario no encontrado']);
+    echo json_encode(['error' => 'Usuario no encontrado, ID ' . $data["id_usuario"]]);
     return;
   }
 
-  echo json_encode(['mensaje' => 'Usuario eliminado correctamente']);
+  echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true, "mensaje" => "Aviso eliminado de manera logica!"]);
 }
 
 function listarUsuarios()
@@ -224,13 +221,20 @@ function listarUsuarios()
     dt.descripcion AS documento_tipo,
     ue.descripcion AS usuario_estado,
     u.numero_documento,
-    ut.permiso_nombre
+    ut.permiso_nombre AS usuario_tipo,
+    ut.id_usuario_tipo As id_usuario_tipo,
+    c.id_carrera AS id_carrera,
+    c.descripcion AS carrera,
+    uc.anio AS anio,
+    uc.comision AS comision
       FROM
           usuarios AS u
       INNER JOIN documento_tipos AS dt ON u.id_documento_tipo = dt.id_documento_tipo
       INNER JOIN usuario_estados AS ue ON u.id_usuario_estado = ue.id_usuario_estado
       LEFT JOIN usuario_roles AS ur ON u.id_usuario = ur.id_usuario
       LEFT JOIN usuario_tipos AS ut ON ur.id_usuario_tipo = ut.id_usuario_tipo
+      LEFT JOIN usuario_carreras AS uc ON u.id_usuario = uc.id_usuario
+      LEFT JOIN carreras AS c ON c.id_carrera = uc.id_carrera
       WHERE
           1=1;";
 
