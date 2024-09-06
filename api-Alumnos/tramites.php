@@ -91,47 +91,6 @@ function modificarTramites()
     echo json_encode(['mensaje' => 'Tramite modificado Con Exito!']);
 }
 
-// function modificarTramites()
-// {
-//     global $pdo;
-
-//     $data = json_decode(file_get_contents('php://input'), true);
-
-//     if (
-//         !isset($data['id_tramite']) || !isset($data['id_usuario_creacion']) || !isset($data['id_usuario_responsable'])
-//         || !isset($data['id_tramite_tipo']) || !isset($data['id_estado_tramite']) || !isset($data['descripcion'])
-//     ) {
-//         throw new Exception('Todos los campos son obligatorios');
-//     }
-
-//     $id_tramite = $data['id_tramite'];
-//     $id_usuario_creacion = $data['id_usuario_creacion'];
-//     $id_usuario_responsable = $data['id_usuario_responsable'];
-//     $id_tramite_tipo = $data['id_tramite_tipo'];
-//     $id_estado_tramite = $data['id_estado_tramite'];
-//     $descripcion = $data['descripcion'];
-//     $fecha_creacion = date("Y-m-d H:i:s");
-
-//     $stmt = $pdo->prepare("UPDATE tramites SET id_usuario_creacion=?, id_usuario_responsable=?, id_tramite_tipo=?,
-//     id_estado_tramite=?, descripcion=?, fecha_creacion=? WHERE id_tramite=?");
-//     $stmt->execute([$id_usuario_creacion, $id_usuario_responsable, $id_tramite_tipo, $id_estado_tramite, $descripcion, $fecha_creacion, $id_tramite]);
-
-
-//     if ($stmt->rowCount() === 0) {
-//         http_response_code(404); // No encontrado
-//         echo json_encode(['error' => 'Tramite no encontrado']);
-//         return;
-//     }
-
-//     echo json_encode(['mensaje' => 'Tramite modificado Con Exito!']);
-// }
-
-
-
-
-
-
-
 function borrarTramites()
 {
     global $pdo;
