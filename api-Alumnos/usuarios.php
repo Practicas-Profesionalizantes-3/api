@@ -189,7 +189,7 @@ function listarUsuarios()
     dt.descripcion AS documento_tipo,
     ue.descripcion AS usuario_estado,
     u.numero_documento,
-    ut.permiso_nombre AS usuario_tipo,
+    ut.descripcion AS usuario_tipo,
     ut.id_usuario_tipo As id_usuario_tipo,
     c.id_carrera AS id_carrera,
     c.descripcion AS carrera,
