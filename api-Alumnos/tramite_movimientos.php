@@ -54,35 +54,6 @@ function crearTramite_movimientos()
 
 }
 
-
-// function crearTramite_movimientos()
-// {
-//     global $pdo;
-
-//     $data = json_decode(file_get_contents('php://input'), true);
-
-//     if (
-//         !isset($data['id_tramite']) || !isset($data['fecha_movimiento']) || !isset($data['id_usuario']) || !isset($data['observacion'])
-//         || !isset($data['id_estado_tramite'])
-//     ) {
-//         throw new Exception('Todos los campos son obligatorios');
-//     }
-
-//     $id_tramite = $data['id_tramite'];
-//     $fecha_movimiento = $data['fecha_movimiento'];
-//     $id_usuario = $data['id_usuario'];
-//     $observacion = $data['observacion'];
-//     $id_estado_tramite = $data['id_estado_tramite'];
-
-//     $stmt = $pdo->prepare("INSERT INTO tramite_movimientos (id_tramite, fecha_movimiento, id_usuario, 
-//     observacion, id_estado_tramite) VALUES (?, ?, ?, ?, ?)");
-//     $stmt->execute([$id_tramite, $fecha_movimiento, $id_usuario, $observacion, $id_estado_tramite]);
-
-//     http_response_code(201); // Creado
-
-//     echo json_encode(['mensaje' => " Creado Correctamente!!"]);
-// }
-
 function modificarTramite_movimientos()
 {
     global $pdo;
