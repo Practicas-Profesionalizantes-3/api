@@ -38,7 +38,7 @@ function crearTramites()
     if (
         !isset($data['id_tramite']) || !isset($data['id_usuario_creacion']) || !isset($data['id_usuario_responsable'])
         || !isset($data['id_tramite_tipo']) || !isset($data['id_estado_tramite']) || !isset($data['descripcion'])
-        || !isset($data['observacion'])
+        
     ) {
         throw new Exception('Todos los campos son obligatorios');
     }
@@ -50,7 +50,6 @@ function crearTramites()
     $id_estado_tramite = $data['id_estado_tramite'];
     $descripcion = $data['descripcion'];
     $fecha_creacion = date("Y-m-d H:i:s");
-    $observacion = $data['observacion'];
 
     $stmt = $pdo->prepare("INSERT INTO tramites (id_tramite, id_usuario_creacion, id_usuario_responsable, id_tramite_tipo, 
     id_estado_tramite, descripcion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?, ?)");
@@ -59,13 +58,9 @@ function crearTramites()
         $descripcion, $fecha_creacion
     ]);
 
-    //Crea en la tabla TRAMITE_MOVIMIENTOS el estado en el que esta
-    $stmt = $pdo->prepare("INSERT INTO tramite_movimientos (id_tramite, fecha_movimiento, id_usuario, observacion, id_estado_tramite) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$id_tramite, $fecha_creacion, $id_usuario_creacion, $observacion, $id_estado_tramite]);
-
     http_response_code(201); // Creado
 
-    echo json_encode(['mensaje' => "Tramite Nº".$id_tramite." Creado Correctamente!!"]);
+    echo json_encode(['mensaje' => " Creado Correctamente!!"]);
 }
 
 function modificarTramites()
@@ -74,13 +69,24 @@ function modificarTramites()
 
     $data = json_decode(file_get_contents('php://input'), true);
 
+    if (
+        !isset($data['id_tramite']) || !isset($data['id_usuario_creacion']) || !isset($data['id_usuario_responsable'])
+        || !isset($data['id_tramite_tipo']) || !isset($data['id_estado_tramite']) || !isset($data['descripcion'])
+    ) {
+        throw new Exception('Todos los campos son obligatorios');
+    }
+
     $id_tramite = $data['id_tramite'];
+    $id_usuario_creacion = $data['id_usuario_creacion'];
+    $id_usuario_responsable = $data['id_usuario_responsable'];
+    $id_tramite_tipo = $data['id_tramite_tipo'];
     $id_estado_tramite = $data['id_estado_tramite'];
+    $descripcion = $data['descripcion'];
+    $fecha_creacion = date("Y-m-d H:i:s");
 
-
-    $stmt = $pdo->prepare("UPDATE tramites SET id_estado_tramite=? WHERE id_tramite=?");
-    $stmt->execute([$id_estado_tramite, $id_tramite]);
-
+    $stmt = $pdo->prepare("UPDATE tramites SET id_usuario_creacion=?, id_usuario_responsable=?, id_tramite_tipo=?,
+    id_estado_tramite=?, descripcion=?, fecha_creacion=? WHERE id_tramite=?");
+    $stmt->execute([$id_usuario_creacion, $id_usuario_responsable, $id_tramite_tipo, $id_estado_tramite, $descripcion, $fecha_creacion, $id_tramite]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
@@ -104,9 +110,6 @@ function borrarTramites()
     $id_tramite = $data['id_tramite'];
 
     $stmt = $pdo->prepare("DELETE FROM tramites WHERE id_tramite=?");
-    $stmt->execute([$id_tramite]);
-
-    $stmt = $pdo->prepare("DELETE FROM tramite_movimientos WHERE id_tramite=?");
     $stmt->execute([$id_tramite]);
 
     if ($stmt->rowCount() === 0) {
@@ -134,7 +137,6 @@ function listarTramites()
     $sql = "SELECT
         t.id_tramite,
         uc.nombre AS usuario,
-        uc.apellido AS usuarioap,
         ur.nombre AS responsable,
         tt.descripcion AS tipo_tramite,
         te.descripcion AS estado_tramite,
