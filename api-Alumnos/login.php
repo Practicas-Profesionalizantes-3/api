@@ -5,7 +5,7 @@ header('Content-Type: application/json');
 
 header('Access-Control-Allow-Origin: *');
 
-header('Access-Control-Allow-Methods: POST, PUT');
+header('Access-Control-Allow-Methods: GET, POST, PUT');
 
 header("Access-Control-Allow-Headers: X-Requested-With");
 
@@ -65,13 +65,13 @@ function iniciarSesion()
 function modificarPassword()
 {
     global $pdo;
-    require "MailSender/SendMailPassword.php";
+    require "MailSender/SendMail.php";
 
     $data = json_decode(file_get_contents('php://input'), true);
 
     $id_usuario = $data['id_usuario'];
     $password = $data['password'];
-    $current_password = $data['current_password'];
+    $current_password = $data['current_password']?? null;
 
     // Obtener la contraseña actual almacenada en la base de datos
     $stmt = $pdo->prepare("SELECT u.password, u.email FROM usuarios AS u WHERE id_usuario=?");
@@ -89,9 +89,11 @@ function modificarPassword()
     $email = $result->email;
 
     // Verificar que la contraseña actual sea correcta
-    if (!password_verify($current_password, $hashed_password)) {
-        echo json_encode(["codigo" => 401, "error" => "Contraseña actual incorrecta", "success" => false, "data" => null]);
-        return;
+    if($current_password != null){
+        if (!password_verify($current_password, $hashed_password)) {
+            echo json_encode(["codigo" => 401, "error" => "Contraseña actual incorrecta", "success" => false, "data" => null]);
+            return;
+        }
     }
 
     // Verificar que la nueva contraseña cumpla con el patrón
@@ -101,6 +103,10 @@ function modificarPassword()
         $stmt = $pdo->prepare("UPDATE usuarios SET password=? WHERE id_usuario=?");
         $stmt->execute([$password, $id_usuario]);
     }
+    else{
+        echo json_encode(["codigo" => 400, "error" => "La nueva contraseña no cumple con los requisitos", "success" => false, "data" => null]);
+        return;
+    }
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
@@ -108,9 +114,11 @@ function modificarPassword()
         return;
     }
 
-    if (SendMail($email, "Cambio de contraseña", "Usuario, le notificamos que su contraseña ha sido modificada.")) {
-        echo json_encode(["codigo" => 200, "error" => null, "success" => true, "data" => null]);
+    if (SendMail($email, "Cambio de contraseña", "Usuario, le notificamos que su contraseña ha sido modificada.", true)) {
+        http_response_code(200);
+        echo json_encode(["codigo" => 200, "error" => null, "success" => true, "mensaje" => "Contraseña modificada", "data" => null]);
     } else {
+        http_response_code(200);
         echo json_encode(["codigo" => 200, "error" => "No se pudo enviar el mail", "success" => false, "data" => null]);
     }
 }
