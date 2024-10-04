@@ -212,7 +212,7 @@ function listarUsuarios()
     $id_documento_tipo = isset($_GET['id_documento_tipo']) ? $_GET['id_documento_tipo'] : null;
     $id_usuario_estado = isset($_GET['id_usuario_estado']) ? (int) $_GET['id_usuario_estado'] : null;
     $numero_documento = isset($_GET['numero_documento']) ? $_GET['numero_documento'] : null;
-    $descripcion  = isset($_GET['descripcion ']) ? $_GET['descripcion'] : null;
+    $permiso_nombre = isset($_GET['permiso_nombre']) ? $_GET['permiso_nombre'] : null;
 
     $sql = "SELECT
         u.id_usuario,
@@ -220,9 +220,11 @@ function listarUsuarios()
         u.apellido,
         u.email,
         dt.descripcion AS documento_tipo,
-        u.numero_documento,
         ue.descripcion AS usuario_estado,
+        u.numero_documento,
         ut.descripcion AS usuario_tipo,
+        ut.id_usuario_tipo As id_usuario_tipo,
+        c.id_carrera AS id_carrera,
         c.descripcion AS carrera,
         uc.anio AS anio,
         uc.comision AS comision
@@ -266,9 +268,9 @@ function listarUsuarios()
         $sql .= " AND u.numero_documento = :numero_documento";
         $params[':numero_documento'] = $numero_documento;
     }
-    if ($descripcion != null) {
-        $sql .= " AND LOWER(ut.descripcion) LIKE LOWER(:descripcion)";
-        $params[':descripcion'] = "%$descripcion%";
+    if ($permiso_nombre != null) {
+        $sql .= " AND LOWER(ut.permiso_nombre) LIKE LOWER(:permiso_nombre)";
+        $params[':permiso_nombre'] = "%$permiso_nombre%";
     }
 
     $stmt = $pdo->prepare($sql);
@@ -280,6 +282,6 @@ function listarUsuarios()
         echo json_encode(["codigo" => 404, "error" => "No se encontraron usuarios", "success" => false, "mensaje" => "Error", "data" => null]);
         return;
     }
-
-    echo json_encode(["codigo" => 200, "error" => null, "success" => true, "mensaje" => "Usuario/s obtenido/s con exito", "data" => json_encode($usuario)]);
+ 
+    echo json_encode(["codigo" => 200, "error" => null, "success" => true, "mensaje" => "Usuario/s obtenido/s con exito", "data" => $usuario]);
 }

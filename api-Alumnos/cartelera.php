@@ -230,7 +230,7 @@ function listarAvisos()
         }
     }
 
-    echo json_encode(["codigo" => 200, "error" => null, "success" => true, "mensaje" => "Anuncios obtenidos con exito!", "data" => json_encode($anuncios)]);
+    echo json_encode(["codigo" => 200, "error" => null, "success" => true, "mensaje" => "Anuncios obtenidos con exito!", "data" => $anuncios]);
 }
 
 

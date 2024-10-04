@@ -128,10 +128,10 @@ function listarNotificacion()
 
     $sql = "SELECT
     n.id_notificacion,
-    a.id_aviso,
-    a.descripcion as descripcion_aviso,
-    t.id_tramite,
-    t.descripcion as descripcion_tramite,
+    n.id_aviso,
+    a.descripcion as id_aviso_descripcion,
+    n.id_tramite,
+    t.descripcion AS id_tramite_descripcion,
     tn.descripcion AS id_notificacion_tipo,
     n.fecha_envio_notificacion
 FROM
@@ -142,19 +142,19 @@ FROM
     WHERE 1=1";
 
     if ($id_notificacion != null) {
-        $sql .= " AND n.id_notificacion=$id_notificacion";
+        $sql .= " AND u.id_notificacion=$id_notificacion";
     }
     if ($id_aviso != null) {
-        $sql .= " AND n.id_aviso=$id_aviso";
+        $sql .= " AND u.id_aviso=$id_aviso";
     }
     if ($id_tramite != null) {
-        $sql .= " AND n.id_tramite=$id_tramite";
+        $sql .= " AND u.id_tramite=$id_tramite";
     }
     if ($id_notificacion_tipo != null) {
-        $sql .= " AND n.id_notificacion_tipo=$id_notificacion_tipo";
+        $sql .= " AND u.id_notificacion_tipo=$id_notificacion_tipo";
     }
     if ($fecha_envio_notificacion != null) {
-        $sql .= " AND n.fecha_envio_notificacion=$fecha_envio_notificacion";
+        $sql .= " AND u.fecha_envio_notificacion=$fecha_envio_notificacion";
     }
 
 
