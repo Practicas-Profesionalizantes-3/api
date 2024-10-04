@@ -64,21 +64,15 @@ function modificarNotificacion()
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (
-        !isset($data['id_notificacion']) || !isset($data['id_aviso']) || !isset($data['id_tramite']) || !isset($data['id_notificacion_tipo'])
-        || !isset($data['fecha_envio_notificacion'])
-    ) {
+    if (!isset($data['idNotificacion']) || !isset($data['estadoNotificacion'])) {
         throw new Exception('Todos los campos son obligatorios');
     }
 
-    $id_notificacion = $data['id_notificacion'];
-    $id_aviso = $data['id_aviso'];
-    $id_tramite = $data['id_tramite'];
-    $id_notificacion_tipo = $data['id_notificacion_tipo'];
-    $fecha_envio_notificacion = $data['fecha_envio_notificacion'];
+    $id_notificacion = $data['idNotificacion'];
+    $estado_notificacion = $data['estadoNotificacion'];
 
-    $stmt = $pdo->prepare("UPDATE notificaciones SET tipo_notificacion=?, id_aviso=?, id_tramite=?, id_notificacion_tipo=?, fecha_envio_notificacion=? WHERE id_notificacion=?");
-    $stmt->execute([$id_aviso, $id_tramite, $id_notificacion_tipo, $fecha_envio_notificacion, $id_notificacion]);
+    $stmt = $pdo->prepare("UPDATE notificaciones SET estado_notificacion=? WHERE id_notificacion=?");
+    $stmt->execute([$estado_notificacion, $id_notificacion]);
 
     if ($stmt->rowCount() === 0) {
         http_response_code(404); // No encontrado
@@ -86,7 +80,12 @@ function modificarNotificacion()
         return;
     }
 
-    echo json_encode(['mensaje' => 'Anuncio modificado correctamente!']);
+    // Actualiza el contador de notificaciones no leídas
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM notificaciones WHERE estado_notificacion='no_leida'");
+    $stmt->execute();
+    $count = $stmt->fetchColumn();
+
+    echo json_encode(['mensaje' => 'Notificación modificada correctamente!', 'count' => $count]);
 }
 
 
@@ -128,32 +127,34 @@ function listarNotificacion()
     $fecha_envio_notificacion = isset($_GET['fecha_envio_notificacion']) ? $_GET['fecha_envio_notificacion'] : null;
 
     $sql = "SELECT
-        n.id_notificacion,
-        a.descripcion as id_aviso,
-        t.descripcion AS id_tramite,
-        tn.descripcion AS id_notificacion_tipo,
-        n.fecha_envio_notificacion
-    FROM
-        notificaciones AS n
-        INNER JOIN avisos AS a ON n.id_aviso = a.id_aviso
-        INNER JOIN tramites AS t ON n.id_tramite = t.id_tramite
-        INNER JOIN tipo_notificaciones AS tn ON n.id_notificacion_tipo = tn.id_notificacion_tipo
-   WHERE 1=1";
+    n.id_notificacion,
+    a.id_aviso,
+    a.descripcion as descripcion_aviso,
+    t.id_tramite,
+    t.descripcion as descripcion_tramite,
+    tn.descripcion AS id_notificacion_tipo,
+    n.fecha_envio_notificacion
+FROM
+    notificaciones AS n
+    LEFT JOIN avisos AS a ON n.id_aviso = a.id_aviso
+    LEFT JOIN tramites AS t ON n.id_tramite = t.id_tramite
+    LEFT JOIN tipo_notificaciones AS tn ON n.id_notificacion_tipo = tn.id_notificacion_tipo
+    WHERE 1=1";
 
     if ($id_notificacion != null) {
-        $sql .= " AND u.id_notificacion=$id_notificacion";
+        $sql .= " AND n.id_notificacion=$id_notificacion";
     }
     if ($id_aviso != null) {
-        $sql .= " AND u.id_aviso=$id_aviso";
+        $sql .= " AND n.id_aviso=$id_aviso";
     }
     if ($id_tramite != null) {
-        $sql .= " AND u.id_tramite=$id_tramite";
+        $sql .= " AND n.id_tramite=$id_tramite";
     }
     if ($id_notificacion_tipo != null) {
-        $sql .= " AND u.id_notificacion_tipo=$id_notificacion_tipo";
+        $sql .= " AND n.id_notificacion_tipo=$id_notificacion_tipo";
     }
     if ($fecha_envio_notificacion != null) {
-        $sql .= " AND u.fecha_envio_notificacion=$fecha_envio_notificacion";
+        $sql .= " AND n.fecha_envio_notificacion=$fecha_envio_notificacion";
     }
 
 
