@@ -283,5 +283,5 @@ function listarUsuarios()
         return;
     }
 
-    echo json_encode(["codigo" => 200, "error" => null, "success" => true, "mensaje" => "Usuario/s obtenido/s con exito", "data" => json_encode($usuario)]);
+    echo json_encode(["codigo" => 200, "error" => null, "success" => true, "mensaje" => "Usuario/s obtenido/s con exito", "data" => $usuario]);
 }
