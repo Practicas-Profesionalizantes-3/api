@@ -33,27 +33,50 @@ function iniciarSesion()
 {
     global $pdo;
     $data = json_decode(file_get_contents('php://input'), true);
-
+ 
     if (!isset($data['user']) || !isset($data['password'])) {
         echo json_encode("Usuario o contraseña no ingresados");
         return;
     }
-
+ 
     $email = $data['user'];
     $password = $data['password'];
-
+ 
+    // Verificar la contraseña
     $stmt = $pdo->prepare("SELECT password FROM usuarios WHERE email=?");
     $stmt->execute([$email]);
     $hashed_password = $stmt->fetchColumn();
-
+ 
     if (password_verify($password, $hashed_password)) {
+        // Obtener los datos del usuario
         $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email=?");
         $stmt->execute([$email]);
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-
+ 
         if ($usuario) {
-            session_start();
-            echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true, "data" => json_encode($usuario)]);
+            // Obtener el tipo de rol del usuario desde usuario_roles y usuario_tipos
+            $stmtRol = $pdo->prepare("
+                SELECT ut.id_usuario_tipo
+                FROM usuario_roles ur
+                JOIN usuario_tipos ut ON ur.id_usuario_tipo = ut.id_usuario_tipo
+                WHERE ur.id_usuario = ?
+            ");
+            $stmtRol->execute([$usuario['id_usuario']]);
+            $rol = $stmtRol->fetchColumn();
+ 
+            if ($rol) {
+                // Agregar el rol a la respuesta
+                $usuario['id_usuario_tipo'] = $rol;
+                session_start();
+                echo json_encode([
+                    "codigo" => 200,
+                    "error" => "No hay error",
+                    "success" => true,
+                    "data" => json_encode($usuario)
+                ]);
+            } else {
+                echo json_encode(["success" => false, 'error' => "No se encontró el rol del usuario", 'codigo' => 403]);
+            }
         } else {
             echo json_encode(["success" => false, 'error' => "Usuario o contraseña incorrectos", 'codigo' => 401]);
         }
@@ -61,7 +84,6 @@ function iniciarSesion()
         echo json_encode(["success" => false, 'error' => "Usuario o contraseña incorrectos", 'codigo' => 402]);
     }
 }
-
 function modificarPassword()
 {
     global $pdo;

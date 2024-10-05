@@ -37,7 +37,7 @@ function crearNotificacion()
 
     if (
         !isset($data['id_notificacion']) || !isset($data['id_aviso']) || !isset($data['id_tramite']) || !isset($data['id_notificacion_tipo'])
-        || !isset($data['fecha_envio_notificacion'])
+        || !isset($data['fecha_envio_notificacion'])  || !isset($data['id_notificacion_estado'])
     ) {
         throw new Exception('Todos los campos son obligatorios');
     }
@@ -47,11 +47,12 @@ function crearNotificacion()
     $id_tramite = $data['id_tramite'];
     $id_notificacion_tipo = $data['id_notificacion_tipo'];
     $fecha_envio_notificacion = $data['fecha_envio_notificacion'];
+    $id_notificacion_estado = $data['id_notificacion_estado'];
 
     //DATE('y-m-d/TH:i:sP')
-    $stmt = $pdo->prepare("INSERT INTO notificaciones (id_notificacion, id_aviso, id_tramite, id_notificacion_tipo, fecha_envio_notificacion)
-     VALUES (?, ?, ?, ?, now(), time(now())");
-    $stmt->execute([$id_notificacion, $id_aviso, $id_tramite, $id_notificacion_tipo, $fecha_envio_notificacion]);
+    $stmt = $pdo->prepare("INSERT INTO notificaciones (id_notificacion, id_aviso, id_tramite, id_notificacion_tipo, fecha_envio_notificacion, id_notificacion_estado)
+     VALUES (?, ?, ?, ?, now(), time(now()), ?");
+    $stmt->execute([$id_notificacion, $id_aviso, $id_tramite, $id_notificacion_tipo, $fecha_envio_notificacion, $id_notificacion_estado]);
 
     http_response_code(201); // Creado
 
@@ -62,31 +63,61 @@ function modificarNotificacion()
 {
     global $pdo;
 
-    $data = json_decode(file_get_contents('php://input'), true);
-
-    if (!isset($data['idNotificacion']) || !isset($data['estadoNotificacion'])) {
-        throw new Exception('Todos los campos son obligatorios');
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405); // Método no permitido
+        echo json_encode(['error' => 'Método no permitido']);
+        return;
     }
 
-    $id_notificacion = $data['idNotificacion'];
-    $estado_notificacion = $data['estadoNotificacion'];
+    $data = json_decode(file_get_contents('php://input'), true);
+    var_dump($data); // Verifica los datos recibidos
 
-    $stmt = $pdo->prepare("UPDATE notificaciones SET estado_notificacion=? WHERE id_notificacion=?");
-    $stmt->execute([$estado_notificacion, $id_notificacion]);
+    // Verificar que los campos existan, sean numéricos y no estén vacíos
+    if (!isset($data['id_notificacion']) || !isset($data['id_notificacion_estado']) || 
+        !is_numeric($data['id_notificacion']) || !is_numeric($data['id_notificacion_estado'])) {
+        http_response_code(400); // Solicitud incorrecta
+        echo json_encode(['error' => 'Todos los campos son obligatorios y deben ser numéricos']);
+        return;
+    }
 
-    if ($stmt->rowCount() === 0) {
-        http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'notificacion no encontrado']);
+    $id_notificacion = (int)$data['id_notificacion']; // Asegurarse de que sea un entero
+    $id_notificacion_estado = (int)$data['id_notificacion_estado']; // Asegurarse de que sea un entero
+
+    // Actualizar el estado de la notificación
+    try {
+        $stmt = $pdo->prepare("UPDATE notificaciones SET id_notificacion_estado=? WHERE id_notificacion=?");
+        $stmt->execute([$id_notificacion_estado, $id_notificacion]);
+
+        // Comprobar si la notificación fue encontrada y actualizada
+        if ($stmt->rowCount() === 0) {
+            http_response_code(404); // No encontrado
+            echo json_encode(['error' => 'Notificación no encontrada']);
+            return;
+        }
+    } catch (PDOException $e) {
+        http_response_code(500); // Error interno del servidor
+        echo json_encode(['error' => 'Error en la base de datos: ' . $e->getMessage()]);
         return;
     }
 
     // Actualiza el contador de notificaciones no leídas
-    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM notificaciones WHERE estado_notificacion='no_leida'");
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM notificaciones WHERE id_notificacion_estado=4");
     $stmt->execute();
     $count = $stmt->fetchColumn();
 
+    // Respuesta exitosa
     echo json_encode(['mensaje' => 'Notificación modificada correctamente!', 'count' => $count]);
 }
+
+
+
+
+
+
+
+
+
+
 
 
 function borrarNotificacion()
@@ -125,6 +156,7 @@ function listarNotificacion()
     $id_tramite = isset($_GET['id_tramite']) ? $_GET['id_tramite'] : null;
     $id_notificacion_tipo = isset($_GET['id_notificacion_tipo']) ? $_GET['id_notificacion_tipo'] : null;
     $fecha_envio_notificacion = isset($_GET['fecha_envio_notificacion']) ? $_GET['fecha_envio_notificacion'] : null;
+    $id_notificacion_estado = isset($_GET['id_notificacion_estado']) ? $_GET['id_notificacion_estado'] : null;
 
     $sql = "SELECT
     n.id_notificacion,
@@ -133,7 +165,8 @@ function listarNotificacion()
     n.id_tramite,
     t.descripcion AS id_tramite_descripcion,
     tn.descripcion AS id_notificacion_tipo,
-    n.fecha_envio_notificacion
+    n.fecha_envio_notificacion,
+    n.id_notificacion_estado
 FROM
     notificaciones AS n
     LEFT JOIN avisos AS a ON n.id_aviso = a.id_aviso
