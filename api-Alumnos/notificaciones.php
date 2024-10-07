@@ -35,12 +35,7 @@ function crearNotificacion()
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (
-        !isset($data['id_notificacion']) || !isset($data['id_aviso']) || !isset($data['id_tramite']) || !isset($data['id_notificacion_tipo'])
-        || !isset($data['fecha_envio_notificacion'])  || !isset($data['id_notificacion_estado'])
-    ) {
-        throw new Exception('Todos los campos son obligatorios');
-    }
+    
 
     $id_notificacion = $data['id_notificacion'];
     $id_aviso = $data['id_aviso'];
@@ -63,51 +58,46 @@ function modificarNotificacion()
 {
     global $pdo;
 
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        http_response_code(405); // Método no permitido
-        echo json_encode(['error' => 'Método no permitido']);
-        return;
-    }
-
-    $data = json_decode(file_get_contents('php://input'), true);
-    var_dump($data); // Verifica los datos recibidos
-
-    // Verificar que los campos existan, sean numéricos y no estén vacíos
-    if (!isset($data['id_notificacion']) || !isset($data['id_notificacion_estado']) || 
-        !is_numeric($data['id_notificacion']) || !is_numeric($data['id_notificacion_estado'])) {
-        http_response_code(400); // Solicitud incorrecta
-        echo json_encode(['error' => 'Todos los campos son obligatorios y deben ser numéricos']);
-        return;
-    }
-
-    $id_notificacion = (int)$data['id_notificacion']; // Asegurarse de que sea un entero
-    $id_notificacion_estado = (int)$data['id_notificacion_estado']; // Asegurarse de que sea un entero
-
-    // Actualizar el estado de la notificación
     try {
+        if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
+            http_response_code(405); // Método no permitido
+            echo json_encode(['error' => 'Método no permitido']);
+            return;
+        }
+
+        // Obtener el cuerpo de la solicitud
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        // Verificar campos obligatorios
+        if (!isset($data['id_notificacion']) || !isset($data['id_notificacion_estado']) ||
+            !is_numeric($data['id_notificacion']) || !is_numeric($data['id_notificacion_estado'])) {
+            http_response_code(400); // Solicitud incorrecta
+            echo json_encode(['error' => 'Todos los campos son obligatorios y deben ser numéricos']);
+            return;
+        }
+
+        $id_notificacion = (int)$data['id_notificacion'];
+        $id_notificacion_estado = (int)$data['id_notificacion_estado'];
+
+        // Actualizar la base de datos
         $stmt = $pdo->prepare("UPDATE notificaciones SET id_notificacion_estado=? WHERE id_notificacion=?");
         $stmt->execute([$id_notificacion_estado, $id_notificacion]);
 
-        // Comprobar si la notificación fue encontrada y actualizada
         if ($stmt->rowCount() === 0) {
             http_response_code(404); // No encontrado
-            echo json_encode(['error' => 'Notificación no encontrada']);
+            echo json_encode(['error' => 'Notificación no encontrada o sin cambios']);
             return;
         }
-    } catch (PDOException $e) {
+
+        // Respuesta exitosa
+        echo json_encode(['mensaje' => 'Notificación modificada correctamente!']);
+    } catch (Exception $e) {
         http_response_code(500); // Error interno del servidor
-        echo json_encode(['error' => 'Error en la base de datos: ' . $e->getMessage()]);
-        return;
+        echo json_encode(['error' => 'Error en la API: ' . $e->getMessage()]);
     }
-
-    // Actualiza el contador de notificaciones no leídas
-    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM notificaciones WHERE id_notificacion_estado=4");
-    $stmt->execute();
-    $count = $stmt->fetchColumn();
-
-    // Respuesta exitosa
-    echo json_encode(['mensaje' => 'Notificación modificada correctamente!', 'count' => $count]);
 }
+
+
 
 
 
@@ -175,19 +165,19 @@ FROM
     WHERE 1=1";
 
     if ($id_notificacion != null) {
-        $sql .= " AND u.id_notificacion=$id_notificacion";
+        $sql .= " AND n.id_notificacion=$id_notificacion";
     }
     if ($id_aviso != null) {
-        $sql .= " AND u.id_aviso=$id_aviso";
+        $sql .= " AND n.id_aviso=$id_aviso";
     }
     if ($id_tramite != null) {
-        $sql .= " AND u.id_tramite=$id_tramite";
+        $sql .= " AND n.id_tramite=$id_tramite";
     }
     if ($id_notificacion_tipo != null) {
-        $sql .= " AND u.id_notificacion_tipo=$id_notificacion_tipo";
+        $sql .= " AND n.id_notificacion_tipo=$id_notificacion_tipo";
     }
     if ($fecha_envio_notificacion != null) {
-        $sql .= " AND u.fecha_envio_notificacion=$fecha_envio_notificacion";
+        $sql .= " AND n.fecha_envio_notificacion=$fecha_envio_notificacion";
     }
 
 
