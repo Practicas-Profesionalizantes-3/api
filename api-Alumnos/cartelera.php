@@ -34,7 +34,6 @@ try {
     http_response_code(400); // Solicitud incorrecta
     echo json_encode(['error' => $e->getMessage()]);
 }
-
 function crearAviso()
 {
     global $pdo;
@@ -66,19 +65,37 @@ function crearAviso()
     $id_aviso_estado = $_POST['id_aviso_estado'];
 
     try {
+        // Prepara el INSERT en la tabla `avisos`
         $stmt = $pdo->prepare("INSERT INTO `avisos` (id_aviso_tipo, id_usuario, titulo, descripcion, fecha_publicacion, fecha_vencimiento, adjunto, fijado, id_aviso_estado, imagen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([
             $id_aviso_tipo, $id_usuario, $titulo, $descripcion, $fecha_publicacion,
             $fecha_vencimiento, isset($_FILES['adjunto']) ? $file_content_adjunto : "", $fijado, $id_aviso_estado, isset($_FILES['imagen']) ? $file_content : ""
         ]);
 
-        http_response_code(201); // Creado
+        // Obtiene el ID del aviso recién creado
+        $lastInsertId = $pdo->lastInsertId();
 
-        echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true, "mensaje" => "Aviso Nº " . $pdo->lastInsertId() . " creado correctamente!"]);
+        // Respuesta con éxito, incluyendo el ID del aviso recién creado
+        http_response_code(201); // Creado
+        echo json_encode([
+            "codigo" => 200,
+            "error" => "No hay error",
+            "success" => true,
+            "mensaje" => "Aviso Nº " . $lastInsertId . " creado correctamente!",
+            "id_aviso" => $lastInsertId // Devuelve el ID del aviso recién creado
+        ]);
+
     } catch (Exception $e) {
-        echo json_encode(["codigo" => 500, "error" => "No se pudo guardar en la base", "success" => false, "mensaje" => null]);
+        // Si ocurre un error, devuelve un mensaje de error
+        echo json_encode([
+            "codigo" => 500,
+            "error" => "No se pudo guardar en la base",
+            "success" => false,
+            "mensaje" => null
+        ]);
     }
 }
+
 
 function modificarAviso()
 {
