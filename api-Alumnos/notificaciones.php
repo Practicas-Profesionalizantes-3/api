@@ -32,27 +32,20 @@ try {
 function crearNotificacion()
 {
     global $pdo;
-
     $data = json_decode(file_get_contents('php://input'), true);
 
-    
-
-    $id_notificacion = $data['id_notificacion'];
     $id_aviso = $data['id_aviso'];
-    $id_tramite = $data['id_tramite'];
+    $id_tramite = $data['id_tramite'] ?? null; // Puedes recibirlo o mantenerlo como null
     $id_notificacion_tipo = $data['id_notificacion_tipo'];
-    $fecha_envio_notificacion = $data['fecha_envio_notificacion'];
     $id_notificacion_estado = $data['id_notificacion_estado'];
 
-    //DATE('y-m-d/TH:i:sP')
-    $stmt = $pdo->prepare("INSERT INTO notificaciones (id_notificacion, id_aviso, id_tramite, id_notificacion_tipo, fecha_envio_notificacion, id_notificacion_estado)
-     VALUES (?, ?, ?, ?, now(), time(now()), ?");
-    $stmt->execute([$id_notificacion, $id_aviso, $id_tramite, $id_notificacion_tipo, $fecha_envio_notificacion, $id_notificacion_estado]);
+    $stmt = $pdo->prepare("INSERT INTO notificaciones (id_aviso, id_tramite, id_notificacion_tipo, fecha_envio_notificacion, id_notificacion_estado) VALUES (?, ?, ?, NOW(), ?)");
+    $stmt->execute([$id_aviso, $id_tramite, $id_notificacion_tipo, $id_notificacion_estado]);
 
     http_response_code(201); // Creado
-
-    echo json_encode(['mensaje' => "Notificación Nº " . $pdo->lastInsertId() . " creada correctamente!"]);
+    echo json_encode(['mensaje' => "Notificación creada correctamente!"]);
 }
+
 
 function modificarNotificacion()
 {
