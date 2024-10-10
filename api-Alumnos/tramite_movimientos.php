@@ -33,49 +33,85 @@ function crearTramite_movimientos()
 {
     global $pdo;
 
+    header('Content-Type: application/json');
     $data = json_decode(file_get_contents('php://input'), true);
 
-    if (
-        !isset($data['id_tramite']) || !isset($data['fecha_movimiento']) || !isset($data['id_usuario']) || !isset($data['observacion'])
-        || !isset($data['id_estado_tramite'])
-    ) {
-        throw new Exception('Todos los campos son obligatorios');
-    }
-
     $id_tramite = $data['id_tramite'];
-    $fecha_movimiento = $data['fecha_movimiento'];
     $id_usuario = $data['id_usuario'];
     $observacion = $data['observacion'];
     $id_estado_tramite = $data['id_estado_tramite'];
 
-    $stmt = $pdo->prepare("INSERT INTO tramite_movimientos (id_tramite, fecha_movimiento, id_usuario, 
-    observacion, id_estado_tramite) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$id_tramite, $fecha_movimiento, $id_usuario, $observacion, $id_estado_tramite]);
+    // Fecha actual
+    $fecha_movimiento = date('Y-m-d');
 
-    http_response_code(201); // Creado
+    // Verificar si ya existe un movimiento para este trámite y esta fecha
+    $stmt = $pdo->prepare("SELECT id_tramite FROM tramite_movimientos 
+                           WHERE id_tramite = ? AND fecha_movimiento = ?");
+    $stmt->execute([$id_tramite, $fecha_movimiento]);
+    $existingMovimiento = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    echo json_encode(['mensaje' => " Creado Correctamente!!"]);
+    if ($existingMovimiento) {
+        // Si ya existe, actualizar el registro existente
+        $stmt = $pdo->prepare("UPDATE tramite_movimientos 
+                               SET id_usuario = ?, observacion = ?, id_estado_tramite = ? 
+                               WHERE id_tramite = ?");
+        $stmt->execute([$id_usuario, $observacion, $id_estado_tramite, $existingMovimiento['id_tramite']]);
+
+        http_response_code(200); // Actualizado
+        echo json_encode(['mensaje' => "Movimiento actualizado correctamente."]);
+    } else {
+        // Si no existe, crear un nuevo registro
+        $stmt = $pdo->prepare("INSERT INTO tramite_movimientos (id_tramite, fecha_movimiento, id_usuario, 
+        observacion, id_estado_tramite) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$id_tramite, $fecha_movimiento, $id_usuario, $observacion, $id_estado_tramite]);
+
+        http_response_code(201); // Creado
+        echo json_encode(['mensaje' => "Movimiento creado correctamente."]);
+    }
 }
+
+
+
+// function crearTramite_movimientos()
+// {
+//     global $pdo;
+
+//     $data = json_decode(file_get_contents('php://input'), true);
+
+//     if (
+//         !isset($data['id_tramite']) || !isset($data['fecha_movimiento']) || !isset($data['id_usuario']) || !isset($data['observacion'])
+//         || !isset($data['id_estado_tramite'])
+//     ) {
+//         throw new Exception('Todos los campos son obligatorios');
+//     }
+
+//     $id_tramite = $data['id_tramite'];
+//     $fecha_movimiento = $data['fecha_movimiento'];
+//     $id_usuario = $data['id_usuario'];
+//     $observacion = $data['observacion'];
+//     $id_estado_tramite = $data['id_estado_tramite'];
+
+//     $stmt = $pdo->prepare("INSERT INTO tramite_movimientos (id_tramite, fecha_movimiento, id_usuario, 
+//     observacion, id_estado_tramite) VALUES (?, ?, ?, ?, ?)");
+//     $stmt->execute([$id_tramite, $fecha_movimiento, $id_usuario, $observacion, $id_estado_tramite]);
+
+//     http_response_code(201); // Creado
+
+//     echo json_encode(['mensaje' => " Creado Correctamente!!"]);
+// }
 
 function modificarTramite_movimientos()
 {
     global $pdo;
 
     $data = json_decode(file_get_contents('php://input'), true);
-
-    if (
-        !isset($data['id_tramite']) || !isset($data['fecha_movimiento']) || !isset($data['id_usuario']) 
-        || !isset($data['observacion']) || !isset($data['id_estado_tramite'])
-    ) {
-        throw new Exception('Todos los campos son obligatorios');
-    }
-
+    
     $id_tramite = $data['id_tramite'];
-    $fecha_movimiento = $data['fecha_movimiento'];
+    $fecha_movimiento = date('Y-m-d'); // Puedes usar otra fecha si la quieres modificar
     $id_usuario = $data['id_usuario'];
     $observacion = $data['observacion'];
     $id_estado_tramite = $data['id_estado_tramite'];
-
+    
     $stmt = $pdo->prepare("UPDATE tramite_movimientos SET fecha_movimiento=?, id_usuario=?, 
     observacion=?, id_estado_tramite=? WHERE id_tramite=?");
     $stmt->execute([$fecha_movimiento, $id_usuario, $observacion, $id_estado_tramite, $id_tramite]);
