@@ -36,7 +36,7 @@ function crearTramites()
     // Inicializar un array para los campos faltantes
     $missingFields = [];
 
-    // Comprobar si los campos obligatorios estÃ¡n presentes en $_POST
+    // Comprobar si los campos obligatorios están presentes en $_POST
     if (!isset($_POST['id_usuario_creacion'])) {
         $missingFields[] = 'id_usuario_creacion';
     }
@@ -50,7 +50,7 @@ function crearTramites()
         $missingFields[] = 'descripcion';
     }
 
-    // Si hay campos faltantes, lanzar excepciÃ³n con detalles
+    // Si hay campos faltantes, lanzar excepción con detalles
     if (!empty($missingFields)) {
         throw new Exception('Los siguientes campos son obligatorios: ' . implode(', ', $missingFields));
     }
@@ -63,7 +63,7 @@ function crearTramites()
     $descripcion = $_POST['descripcion'];
     $fecha_creacion = date("Y-m-d H:i:s");
 
-    // Insertar el trÃ¡mite en la base de datos
+    // Insertar el trámite en la base de datos
     $stmt = $pdo->prepare("INSERT INTO tramites (id_usuario_creacion, id_usuario_responsable, id_tramite_tipo, 
     id_estado_tramite, descripcion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->execute([
@@ -75,12 +75,12 @@ function crearTramites()
         $fecha_creacion
     ]);
 
-    // Obtener el ID del trÃ¡mite creado
+    // Obtener el ID del trámite creado
     $id_tramite = $pdo->lastInsertId();
 
-    // Verificar si se recibiÃ³ un archivo adjunto
+    // Verificar si se recibió un archivo adjunto
     if (isset($_FILES['adjunto']) && $_FILES['adjunto']['error'] === UPLOAD_ERR_OK) {
-        // Obtener informaciÃ³n del archivo
+        // Obtener información del archivo
         $fileTmpPath = $_FILES['adjunto']['tmp_name'];
 
         // Leer el archivo como un blob
@@ -92,16 +92,16 @@ function crearTramites()
             $id_tramite,
             $fileData // Guardamos el contenido como un blob
         ]);
-        echo json_encode(['mensaje' => "Se subiÃ³ el archivo"]);
+        echo json_encode(['mensaje' => "Se subió el archivo"]);
         return;
     } else {
-        echo json_encode(['mensaje' => "NO se subiÃ³ el archivo"]);
+        echo json_encode(['mensaje' => "NO se subió el archivo"]);
         return;
     }
 
-    // Responder con el estado de la creaciÃ³n
+    // Responder con el estado de la creación
     http_response_code(201); // Creado
-    echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true, "mensaje" => "TrÃ¡mite creado correctamente!"]);
+    echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true, "mensaje" => "Trámite creado correctamente!"]);
 }
 
 
