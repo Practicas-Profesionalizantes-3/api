@@ -9,6 +9,8 @@ header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 
 header("Access-Control-Allow-Headers: X-Requested-With");
 
+date_default_timezone_set('America/Argentina/Buenos_Aires');
+
 try {
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'GET':
@@ -38,6 +40,9 @@ function crearAviso()
 {
     global $pdo;
 
+    // Establecer la zona horaria de Buenos Aires
+    date_default_timezone_set('America/Argentina/Buenos_Aires');
+
     // Verifica si se ha enviado un archivo
     if (!isset($_FILES['imagen']) || $_FILES['imagen']['error'] != UPLOAD_ERR_OK) {
         $file_content = null;
@@ -59,10 +64,12 @@ function crearAviso()
     $id_usuario = $_POST['id_usuario'];
     $titulo = $_POST['titulo'];
     $descripcion = $_POST['descripcion'];
-    $fecha_publicacion = $_POST['fecha_publicacion'];
     $fecha_vencimiento = $_POST['fecha_vencimiento'];
     $fijado = $_POST['fijado'];
     $id_aviso_estado = $_POST['id_aviso_estado'];
+
+    // Obtener la fecha y hora actual
+    $fecha_publicacion = date('Y-m-d H:i:s'); // Formato para MySQL
 
     try {
         // Prepara el INSERT en la tabla `avisos`
@@ -95,6 +102,7 @@ function crearAviso()
         ]);
     }
 }
+
 
 
 function modificarAviso()
@@ -199,9 +207,9 @@ function listarAvisos()
         u.id_usuario AS id_usuario
         FROM 
         avisos AS a 
-        INNER JOIN aviso_tipo AS at ON a.id_aviso_tipo = at.id_aviso_tipo 
-        INNER JOIN usuarios AS u ON a.id_usuario = u.id_usuario 
-        INNER JOIN aviso_estado AS e ON e.id_aviso_estado = a.id_aviso_estado
+        LEFT JOIN aviso_tipo AS at ON a.id_aviso_tipo = at.id_aviso_tipo 
+        LEFT JOIN usuarios AS u ON a.id_usuario = u.id_usuario 
+        LEFT JOIN aviso_estado AS e ON e.id_aviso_estado = a.id_aviso_estado
         WHERE 
         1=1";
 

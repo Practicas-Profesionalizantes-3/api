@@ -28,7 +28,6 @@ try {
     http_response_code(400); // Solicitud incorrecta
     echo json_encode(['error' => $e->getMessage()]);
 }
-
 function crearTramites()
 {
     global $pdo;
@@ -61,11 +60,13 @@ function crearTramites()
     $id_tramite_tipo = $_POST['id_tramite_tipo'];
     $id_estado_tramite = 1;
     $descripcion = $_POST['descripcion'];
-    $fecha_creacion = date("Y-m-d H:i:s");
+
+    // Establecer la zona horaria de Buenos Aires
+    date_default_timezone_set('America/Argentina/Buenos_Aires');
+    $fecha_creacion = date("Y-m-d H:i:s"); // Obtener la fecha y hora actual en la zona horaria correcta
 
     // Insertar el trámite en la base de datos
-    $stmt = $pdo->prepare("INSERT INTO tramites (id_usuario_creacion, id_usuario_responsable, id_tramite_tipo, 
-    id_estado_tramite, descripcion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO tramites (id_usuario_creacion, id_usuario_responsable, id_tramite_tipo, id_estado_tramite, descripcion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->execute([
         $id_usuario_creacion,
         $id_usuario_responsable,
@@ -78,31 +79,42 @@ function crearTramites()
     // Obtener el ID del trámite creado
     $id_tramite = $pdo->lastInsertId();
 
-    // Verificar si se recibió un archivo adjunto
-    if (isset($_FILES['adjunto']) && $_FILES['adjunto']['error'] === UPLOAD_ERR_OK) {
-        // Obtener información del archivo
-        $fileTmpPath = $_FILES['adjunto']['tmp_name'];
+    // Enviar la solicitud a la API de notificaciones para crear la notificación asociada al trámite
+    $ch = curl_init();
 
-        // Leer el archivo como un blob
-        $fileData = file_get_contents($fileTmpPath);
+    // Establecer URL de la API de notificaciones
+    curl_setopt($ch, CURLOPT_URL, "http://localhost/api/notificaciones/crearNotificacion.php");
 
-        // Insertar en la tabla tramite_adjuntos
-        $stmtAdjunto = $pdo->prepare("INSERT INTO tramite_adjuntos (id_tramite, archivo) VALUES (?, ?)");
-        $stmtAdjunto->execute([
-            $id_tramite,
-            $fileData // Guardamos el contenido como un blob
-        ]);
-        echo json_encode(['mensaje' => "Se subió el archivo"]);
-        return;
+    // Establecer el método HTTP como POST
+    curl_setopt($ch, CURLOPT_POST, 1);
+
+    // Datos que se enviarán en la solicitud
+    $notificacionData = json_encode([
+        "id_tramite" => $id_tramite, // Pasamos el ID del trámite recién creado
+        "id_aviso" => null, // No hay aviso, solo trámite
+        "id_notificacion_tipo" => 2, // Define el tipo de notificación
+        "id_notificacion_estado" => 1 // Estado de la notificación (por ejemplo, no leída)
+    ]);
+
+    // Incluir los datos en la solicitud
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $notificacionData);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+
+    // Recibir respuesta y ejecutar la solicitud
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    // Verificar la respuesta de la API de notificaciones
+    $responseDecoded = json_decode($response, true);
+    if (isset($responseDecoded['mensaje'])) {
+        echo json_encode(["codigo" => 200, "success" => true, "mensaje" => "Trámite y notificación creados correctamente!"]);
     } else {
-        echo json_encode(['mensaje' => "NO se subió el archivo"]);
-        return;
+        echo json_encode(["codigo" => 500, "success" => false, "mensaje" => "Error al crear la notificación."]);
     }
-
-    // Responder con el estado de la creación
-    http_response_code(201); // Creado
-    echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true, "mensaje" => "Trámite creado correctamente!"]);
 }
+
+
 
 
 function modificarTramites()
@@ -212,10 +224,10 @@ function listarTramites()
         t.fecha_creacion
     FROM
         tramites AS t
-        INNER JOIN tramites_tipo AS tt ON t.id_tramite_tipo = tt.id_tramite_tipo
-        INNER JOIN tramite_estados AS te ON t.id_estado_tramite = te.id_estado_tramite
-        INNER JOIN usuarios AS uc ON t.id_usuario_creacion = uc.id_usuario
-        INNER JOIN usuarios AS ur ON t.id_usuario_responsable = ur.id_usuario
+        LEFT JOIN tramites_tipo AS tt ON t.id_tramite_tipo = tt.id_tramite_tipo
+        LEFT JOIN tramite_estados AS te ON t.id_estado_tramite = te.id_estado_tramite
+        LEFT JOIN usuarios AS uc ON t.id_usuario_creacion = uc.id_usuario
+        LEFT JOIN usuarios AS ur ON t.id_usuario_responsable = ur.id_usuario
     WHERE
         1=1
     ";
@@ -248,7 +260,7 @@ function listarTramites()
 
     if (!$aviso_tipo) {
         http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'No se encontraron Tipo de Aviso']);
+        echo json_encode(['error' => 'No se encontraron Tipo de tramite']);
         return;
     }
 
