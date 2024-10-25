@@ -110,7 +110,7 @@ function crearTramites()
     if (isset($responseDecoded['mensaje'])) {
         echo json_encode(["codigo" => 200, "success" => true, "mensaje" => "Trámite y notificación creados correctamente!"]);
     } else {
-        echo json_encode(["codigo" => 500, "success" => false, "mensaje" => "Error al crear la notificación."]);
+        echo json_encode(["codigo" => 500, "success" => false, "mensaje" => "Error al crear la notificació."]);
     }
 }
 
