@@ -35,7 +35,7 @@ function iniciarSesion()
     $data = json_decode(file_get_contents('php://input'), true);
  
     if (!isset($data['user']) || !isset($data['password'])) {
-        echo json_encode("Usuario o contraseña no ingresados");
+        echo json_encode(["error" => "Usuario o contraseña no ingresados"]);
         return;
     }
  
@@ -43,13 +43,24 @@ function iniciarSesion()
     $password = $data['password'];
  
     // Verificar la contraseña
-    $stmt = $pdo->prepare("SELECT password FROM usuarios WHERE email=?");
+    $stmt = $pdo->prepare("SELECT password, id_usuario_estado FROM usuarios WHERE email=?");
     $stmt->execute([$email]);
-    $hashed_password = $stmt->fetchColumn();
+    $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$userData) {
+        echo json_encode(["success" => false, "error" => "Usuario o contraseña incorrectos", "codigo" => 401]);
+        return;
+    }
+    $hashed_password = $userData['password'];
+    $usuarioEstado = $userData['id_usuario_estado']; // Estado del usuario
+    // Verificar si el usuario está activo
+    if ($usuarioEstado != 1) { // Asumiendo que 1 significa activo
+        echo json_encode(["success" => false, "error" => "El usuario está inactivo", "codigo" => 403]);
+        return;
+    }
  
     if (password_verify($password, $hashed_password)) {
         // Obtener los datos del usuario
-        $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email=?");
+        $stmt = $pdo->prepare("SELECT u.*, c.id_carrera, c.descripcion AS carrera FROM usuarios AS u INNER JOIN usuario_carreras AS uc ON u.id_usuario = uc.id_usuario INNER JOIN carreras AS c ON uc.id_carrera = c.id_carrera WHERE u.email=?");
         $stmt->execute([$email]);
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
  
