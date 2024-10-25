@@ -97,19 +97,6 @@ function modificarNotificacion()
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 function borrarNotificacion()
 {
     global $pdo;

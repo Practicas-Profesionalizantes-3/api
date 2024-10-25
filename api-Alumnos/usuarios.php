@@ -38,64 +38,79 @@ try {
 
 function altaUsuario()
 {
-  global $pdo;
+    global $pdo;
 
-  $data = json_decode(file_get_contents('php://input'), true);
+    $data = json_decode(file_get_contents('php://input'), true);
 
-  if (
-    !isset($data['nombre']) || !isset($data['apellido']) || !isset($data['password']) ||
-    !isset($data['email']) || !isset($data['id_documento_tipo']) || !isset($data['id_usuario_estado']) || !isset($data['numero_documento'])
-    || !isset($data['id_carrera']) || !isset($data['anio']) || !isset($data['comision']) || !isset($data['id_usuario_tipo'])
-  ) {
-    throw new Exception('Todos los campos son obligatorios');
-  }
-
-
-  $nombre = $data['nombre'];
-  $apellido = $data['apellido'];
-  $password = $data['password'];
-  $email = $data['email'];
-  $id_documento_tipo = $data['id_documento_tipo'];
-  $id_usuario_estado = $data['id_usuario_estado'];
-  $numero_documento = $data['numero_documento'];
-  $id_carrera = $data['id_carrera'];
-  $anio = $data['anio'];
-  $comision = $data['comision'];
-  $id_usuario_tipo = $data['id_usuario_tipo'];
-
-
-
-  $stmt = $pdo->prepare("SELECT 1 FROM usuarios WHERE email like ?");
-  $stmt->execute([$email]);
-  $respuesta = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-  if ($respuesta) {
-    http_response_code(409);
-    echo json_encode(['mensaje' => 'Correo existente']);
-  } else {
-    if (preg_match('/^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/', $password)) {
-      $password = password_hash($data['password'], PASSWORD_DEFAULT);
-
-      $stmt = $pdo->prepare("INSERT INTO usuarios (nombre, apellido, password, email, id_documento_tipo, id_usuario_estado, numero_documento) VALUES (?, ?, ?, ?, ?, ?, ?)");
-      $stmt->execute([$nombre, $apellido, $password, $email, $id_documento_tipo, $id_usuario_estado, $numero_documento]);
-
-      $id_usuario = $pdo->lastInsertId();
-
-      $stmt = $pdo->prepare("INSERT INTO usuario_roles (id_usuario, id_usuario_tipo) VALUES (?, ?)");
-      $stmt->execute([$id_usuario, $id_usuario_tipo]);
-
-      $stmt = $pdo->prepare("INSERT INTO usuario_carreras (id_usuario, id_carrera, anio, comision) VALUES (?, ?, ?, ?)");
-      $stmt->execute([$id_usuario, $id_carrera, $anio, $comision]);
-
-      http_response_code(201); // Creado
-      echo json_encode(["codigo" => 201, "error" => "No hay error", "success" => true, "mensaje" => "Usuario creado con exito!"]);
-      return;
-    } else {
-      http_response_code(406);
-      echo json_encode(['mensaje' => 'El password debe tenes una letra mayuscula y al menos un numero!']);
+    // Validación de campos obligatorios
+    if (
+        !isset($data['nombre']) || !isset($data['apellido']) || !isset($data['password']) ||
+        !isset($data['email']) || !isset($data['id_documento_tipo']) || !isset($data['id_usuario_estado']) || !isset($data['numero_documento']) ||
+        !isset($data['id_carrera']) || !isset($data['anio']) || !isset($data['comision']) || !isset($data['id_usuario_tipo'])
+    ) {
+        throw new Exception('Todos los campos son obligatorios');
     }
-  }
+
+    $nombre = $data['nombre'];
+    $apellido = $data['apellido'];
+    $password = $data['password'];
+    $email = $data['email'];
+    $id_documento_tipo = $data['id_documento_tipo'];
+    $id_usuario_estado = $data['id_usuario_estado'];
+    $numero_documento = $data['numero_documento'];
+    $id_carrera = $data['id_carrera'];
+    $anio = $data['anio'];
+    $comision = $data['comision'];
+    $id_usuario_tipo = $data['id_usuario_tipo'];
+
+    // Validación de correo existente
+    $stmt = $pdo->prepare("SELECT 1 FROM usuarios WHERE email LIKE ?");
+    $stmt->execute([$email]);
+    $respuesta_email = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if ($respuesta_email) {
+        http_response_code(409);
+        echo json_encode(['mensaje' => 'Correo existente']);
+        return; // Salir de la función si el correo ya existe
+    }
+
+    // Validación de número de documento existente
+    $stmt = $pdo->prepare("SELECT 1 FROM usuarios WHERE numero_documento = ?");
+    $stmt->execute([$numero_documento]);
+    $respuesta_documento = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if ($respuesta_documento) {
+        http_response_code(409);
+        echo json_encode(['mensaje' => 'Número de documento ya existente']);
+        return; // Salir de la función si el número de documento ya existe
+    }
+
+    // Validación de la contraseña
+    if (preg_match('/^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/', $password)) {
+        $password = password_hash($data['password'], PASSWORD_DEFAULT);
+
+        // Insertar el usuario
+        $stmt = $pdo->prepare("INSERT INTO usuarios (nombre, apellido, password, email, id_documento_tipo, id_usuario_estado, numero_documento) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$nombre, $apellido, $password, $email, $id_documento_tipo, $id_usuario_estado, $numero_documento]);
+
+        $id_usuario = $pdo->lastInsertId();
+
+        // Insertar roles de usuario
+        $stmt = $pdo->prepare("INSERT INTO usuario_roles (id_usuario, id_usuario_tipo) VALUES (?, ?)");
+        $stmt->execute([$id_usuario, $id_usuario_tipo]);
+
+        // Insertar carrera de usuario
+        $stmt = $pdo->prepare("INSERT INTO usuario_carreras (id_usuario, id_carrera, anio, comision) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$id_usuario, $id_carrera, $anio, $comision]);
+
+        http_response_code(201); // Creado
+        echo json_encode(["codigo" => 201, "error" => "No hay error", "success" => true, "mensaje" => "Usuario creado con éxito!"]);
+    } else {
+        http_response_code(406);
+        echo json_encode(['mensaje' => 'El password debe tener una letra mayúscula y al menos un número!']);
+    }
 }
+
 
 function modificarUsuario()
 {

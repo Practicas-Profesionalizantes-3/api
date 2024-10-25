@@ -9,6 +9,8 @@ header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 
 header("Access-Control-Allow-Headers: X-Requested-With");
 
+date_default_timezone_set('America/Argentina/Buenos_Aires');
+
 try {
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'GET':
@@ -39,46 +41,56 @@ function crearAviso()
 {
     global $pdo;
 
-    // Verifica si se ha enviado un archivo
-    if (!isset($_FILES['imagen']) || $_FILES['imagen']['error'] != UPLOAD_ERR_OK) {
-        $file_content = null;
-    } else {
-        // Lee el contenido del archivo 'imagen'
-        $file_content = file_get_contents($_FILES['imagen']['tmp_name']);
-    }
+    date_default_timezone_set('America/Argentina/Buenos_Aires');
 
-    // Verifica si se ha enviado un archivo con el nombre 'adjunto'
-    if (!isset($_FILES['adjunto']) || $_FILES['adjunto']['error'] != UPLOAD_ERR_OK) {
-        $file_content_adjunto = null;
-    } else {
-        // Lee el contenido del archivo 'adjunto'
-        $file_content_adjunto = file_get_contents($_FILES['adjunto']['tmp_name']);
-    }
+    // Manejar archivos
+    $file_content = isset($_FILES['imagen']) && $_FILES['imagen']['error'] == UPLOAD_ERR_OK
+                    ? file_get_contents($_FILES['imagen']['tmp_name'])
+                    : null;
 
-    // Resto de los datos recibidos
+    $file_content_adjunto = isset($_FILES['adjunto']) && $_FILES['adjunto']['error'] == UPLOAD_ERR_OK
+                            ? file_get_contents($_FILES['adjunto']['tmp_name'])
+                            : null;
+
+    // Resto de los datos
     $id_aviso_tipo = $_POST['id_aviso_tipo'];
     $id_usuario = $_POST['id_usuario'];
     $titulo = $_POST['titulo'];
     $descripcion = $_POST['descripcion'];
-    $fecha_publicacion = $_POST['fecha_publicacion'];
     $fecha_vencimiento = $_POST['fecha_vencimiento'];
     $fijado = $_POST['fijado'];
     $id_aviso_estado = $_POST['id_aviso_estado'];
+    $fecha_publicacion = date('Y-m-d H:i:s');
 
     try {
         $stmt = $pdo->prepare("INSERT INTO `avisos` (id_aviso_tipo, id_usuario, titulo, descripcion, fecha_publicacion, fecha_vencimiento, adjunto, fijado, id_aviso_estado, imagen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([
             $id_aviso_tipo, $id_usuario, $titulo, $descripcion, $fecha_publicacion,
-            $fecha_vencimiento, isset($_FILES['adjunto']) ? $file_content_adjunto : "", $fijado, $id_aviso_estado, isset($_FILES['imagen']) ? $file_content : ""
+            $fecha_vencimiento, $file_content_adjunto, $fijado, $id_aviso_estado, $file_content
         ]);
 
-        http_response_code(201); // Creado
+        $lastInsertId = $pdo->lastInsertId();
 
-        echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true, "mensaje" => "Aviso Nº " . $pdo->lastInsertId() . " creado correctamente!"]);
+        http_response_code(201); // Creado
+        echo json_encode([
+            "codigo" => 200,
+            "error" => "No hay error",
+            "success" => true,
+            "mensaje" => "Aviso Nº " . $lastInsertId . " creado correctamente!",
+            "id_aviso" => $lastInsertId
+        ]);
     } catch (Exception $e) {
-        echo json_encode(["codigo" => 500, "error" => "No se pudo guardar en la base", "success" => false, "mensaje" => null]);
+        http_response_code(500);
+        echo json_encode([
+            "codigo" => 500,
+            "error" => "No se pudo guardar en la base",
+            "success" => false,
+            "mensaje" => null
+        ]);
     }
 }
+
+
 
 function modificarAviso()
 {
@@ -113,14 +125,13 @@ function modificarAviso()
         $id_usuario = $data['id_usuario'] ?? null;
         $titulo = $data['titulo'] ?? null;
         $descripcion = $data['descripcion'] ?? null;
-        $fecha_publicacion = $data['fecha_publicacion'] ?? null;
         $fecha_vencimiento = $data['fecha_vencimiento'] ?? null;
         $fijado = $data['fijado'] ?? null;
         $estado = $data['id_aviso_estado'] ?? null;
 
         // Preparar y ejecutar la consulta de actualización
-        $stmt = $pdo->prepare("UPDATE avisos SET id_aviso_tipo=?, id_usuario=?, titulo=?, descripcion=?, fecha_publicacion=?, fecha_vencimiento=?, adjunto=?, fijado=?, imagen=?, id_aviso_estado=? WHERE id_aviso=?");
-        $stmt->execute([$id_aviso_tipo, $id_usuario, $titulo, $descripcion, $fecha_publicacion, $fecha_vencimiento, $adjuntoBlob, $fijado, $imagenBlob, $estado, $id_aviso]);
+        $stmt = $pdo->prepare("UPDATE avisos SET id_aviso_tipo=?, id_usuario=?, titulo=?, descripcion=?, fecha_vencimiento=?, adjunto=?, fijado=?, imagen=?, id_aviso_estado=? WHERE id_aviso=?");
+        $stmt->execute([$id_aviso_tipo, $id_usuario, $titulo, $descripcion, $fecha_vencimiento, $adjuntoBlob, $fijado, $imagenBlob, $estado, $id_aviso]);
 
         echo json_encode(["codigo" => 200, "error" => "No hay error", "success" => true, "mensaje" => "Aviso modificado correctamente!"]);
     } catch (Exception $e) {
@@ -182,9 +193,9 @@ function listarAvisos()
         u.id_usuario AS id_usuario
         FROM 
         avisos AS a 
-        INNER JOIN aviso_tipo AS at ON a.id_aviso_tipo = at.id_aviso_tipo 
-        INNER JOIN usuarios AS u ON a.id_usuario = u.id_usuario 
-        INNER JOIN aviso_estado AS e ON e.id_aviso_estado = a.id_aviso_estado
+        LEFT JOIN aviso_tipo AS at ON a.id_aviso_tipo = at.id_aviso_tipo 
+        LEFT JOIN usuarios AS u ON a.id_usuario = u.id_usuario 
+        LEFT JOIN aviso_estado AS e ON e.id_aviso_estado = a.id_aviso_estado
         WHERE 
         1=1";
 

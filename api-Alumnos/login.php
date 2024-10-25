@@ -28,13 +28,13 @@ try {
     http_response_code(400); // Solicitud incorrecta
     echo json_encode(['error' => $e->getMessage()]);
 }
-
 function iniciarSesion()
 {
     global $pdo;
     $data = json_decode(file_get_contents('php://input'), true);
  
     if (!isset($data['user']) || !isset($data['password'])) {
+        echo json_encode(["error" => "Usuario o contraseña no ingresados"]);
         echo json_encode(["error" => "Usuario o contraseña no ingresados"]);
         return;
     }
@@ -43,6 +43,7 @@ function iniciarSesion()
     $password = $data['password'];
  
     // Verificar la contraseña
+    $stmt = $pdo->prepare("SELECT password, id_usuario_estado FROM usuarios WHERE email=?");
     $stmt = $pdo->prepare("SELECT password, id_usuario_estado FROM usuarios WHERE email=?");
     $stmt->execute([$email]);
     $userData = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -63,7 +64,7 @@ function iniciarSesion()
         $stmt = $pdo->prepare("SELECT u.*, c.id_carrera, c.descripcion AS carrera FROM usuarios AS u INNER JOIN usuario_carreras AS uc ON u.id_usuario = uc.id_usuario INNER JOIN carreras AS c ON uc.id_carrera = c.id_carrera WHERE u.email=?");
         $stmt->execute([$email]);
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
- 
+
         if ($usuario) {
             // Obtener el tipo de rol del usuario desde usuario_roles y usuario_tipos
             $stmtRol = $pdo->prepare("
@@ -74,7 +75,7 @@ function iniciarSesion()
             ");
             $stmtRol->execute([$usuario['id_usuario']]);
             $rol = $stmtRol->fetchColumn();
- 
+
             if ($rol) {
                 // Agregar el rol a la respuesta
                 $usuario['id_usuario_tipo'] = $rol;
@@ -95,6 +96,7 @@ function iniciarSesion()
         echo json_encode(["success" => false, 'error' => "Usuario o contraseña incorrectos", 'codigo' => 402]);
     }
 }
+
 function modificarPassword()
 {
     global $pdo;
