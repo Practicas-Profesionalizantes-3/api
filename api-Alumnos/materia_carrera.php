@@ -34,7 +34,7 @@ function listarMateriaCarrera()
     $id_carrera = isset($_GET['id_carrera']) ? (int)$_GET['id_carrera'] : null;
 
     $sql = "SELECT mc.*, m.materia
-    FROM materia_carrera AS mc
+    FROM materia_carreras AS mc
     INNER JOIN  materias AS m on mc.id_materia = m.id_materia
     WHERE 1=1";
 

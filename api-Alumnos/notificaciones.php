@@ -35,22 +35,21 @@ function crearNotificacion()
 
     $data = json_decode(file_get_contents('php://input'), true);
 
-    
-
-    $id_notificacion = $data['id_notificacion'];
-    $id_aviso = $data['id_aviso'];
-    $id_tramite = $data['id_tramite'];
+    // Obtener parámetros de entrada
+    $id_notificacion = isset($_GET['id_notificacion']) ? (int)$_GET['id_notificacion'] : null;
+    $id_aviso = isset($_GET['id_aviso']) ? (int)$_GET['id_aviso'] : null;
+    $id_tramite = isset($_GET['id_tramite']) ? (int)$_GET['id_tramite'] : null;
     $id_notificacion_tipo = $data['id_notificacion_tipo'];
     $fecha_envio_notificacion = $data['fecha_envio_notificacion'];
     $id_notificacion_estado = $data['id_notificacion_estado'];
 
-    //DATE('y-m-d/TH:i:sP')
+    // Preparar y ejecutar la consulta SQL
     $stmt = $pdo->prepare("INSERT INTO notificaciones (id_notificacion, id_aviso, id_tramite, id_notificacion_tipo, fecha_envio_notificacion, id_notificacion_estado)
-     VALUES (?, ?, ?, ?, now(), time(now()), ?");
+     VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->execute([$id_notificacion, $id_aviso, $id_tramite, $id_notificacion_tipo, $fecha_envio_notificacion, $id_notificacion_estado]);
 
+    // Configurar la respuesta
     http_response_code(201); // Creado
-
     echo json_encode(['mensaje' => "Notificación Nº " . $pdo->lastInsertId() . " creada correctamente!"]);
 }
 

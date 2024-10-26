@@ -65,52 +65,25 @@ function crearTramites()
     date_default_timezone_set('America/Argentina/Buenos_Aires');
     $fecha_creacion = date("Y-m-d H:i:s"); // Obtener la fecha y hora actual en la zona horaria correcta
 
-    // Insertar el trámite en la base de datos
-    $stmt = $pdo->prepare("INSERT INTO tramites (id_usuario_creacion, id_usuario_responsable, id_tramite_tipo, id_estado_tramite, descripcion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->execute([
-        $id_usuario_creacion,
-        $id_usuario_responsable,
-        $id_tramite_tipo,
-        $id_estado_tramite,
-        $descripcion,
-        $fecha_creacion
-    ]);
-
-    // Obtener el ID del trámite creado
-    $id_tramite = $pdo->lastInsertId();
-
-    // Enviar la solicitud a la API de notificaciones para crear la notificación asociada al trámite
-    $ch = curl_init();
-
-    // Establecer URL de la API de notificaciones
-    curl_setopt($ch, CURLOPT_URL, "http://localhost/api/notificaciones/crearNotificacion.php");
-
-    // Establecer el método HTTP como POST
-    curl_setopt($ch, CURLOPT_POST, 1);
-
-    // Datos que se enviarán en la solicitud
-    $notificacionData = json_encode([
-        "id_tramite" => $id_tramite, // Pasamos el ID del trámite recién creado
-        "id_aviso" => null, // No hay aviso, solo trámite
-        "id_notificacion_tipo" => 2, // Define el tipo de notificación
-        "id_notificacion_estado" => 1 // Estado de la notificación (por ejemplo, no leída)
-    ]);
-
-    // Incluir los datos en la solicitud
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $notificacionData);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-
-    // Recibir respuesta y ejecutar la solicitud
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    $response = curl_exec($ch);
-    curl_close($ch);
-
-    // Verificar la respuesta de la API de notificaciones
-    $responseDecoded = json_decode($response, true);
-    if (isset($responseDecoded['mensaje'])) {
-        echo json_encode(["codigo" => 200, "success" => true, "mensaje" => "Trámite y notificación creados correctamente!"]);
-    } else {
-        echo json_encode(["codigo" => 500, "success" => false, "mensaje" => "Error al crear la notificació."]);
+    try{
+        // Insertar el trámite en la base de datos
+        $stmt = $pdo->prepare("INSERT INTO tramites (id_usuario_creacion, id_usuario_responsable, id_tramite_tipo, id_estado_tramite, descripcion, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([
+            $id_usuario_creacion,
+            $id_usuario_responsable,
+            $id_tramite_tipo,
+            $id_estado_tramite,
+            $descripcion,
+            $fecha_creacion
+        ]);
+    
+        // Obtener el ID del trámite creado
+        $id_tramite = $pdo->lastInsertId();
+    
+       
+            echo json_encode(["codigo" => 200, "success" => true, "mensaje" => "Trámite creado correctamente!", "id_tramite" => $id_tramite]);
+    }catch(Exception $ex){
+        echo json_encode(["codigo" => 500, "success" => false, "mensaje" => "No se pudo crear el tramite!"]);
     }
 }
 
