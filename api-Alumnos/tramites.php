@@ -186,57 +186,58 @@ function listarTramites()
     $fecha_creacion = isset($_GET['fecha_creacion']) ? $_GET['fecha_creacion'] : null;
 
     $sql = "SELECT
-    t.id_tramite,
-    uc.nombre AS nombre,
-    uc.apellido AS apellido,
-    ur.nombre AS responsable,
-    tt.descripcion AS tipo_tramite,
-    te.descripcion AS estado_tramite,
-    t.descripcion,
-    t.comentarios,
-    t.fecha_creacion
-FROM
-    tramites AS t
-    LEFT JOIN tramites_tipo AS tt ON t.id_tramite_tipo = tt.id_tramite_tipo
-    LEFT JOIN tramite_estados AS te ON t.id_estado_tramite = te.id_estado_tramite
-    LEFT JOIN tramite_adjuntos AS ta ON t.id_tramite = ta.id_tramite
-    LEFT JOIN usuarios AS uc ON t.id_usuario_creacion = uc.id_usuario
-    LEFT JOIN usuarios AS ur ON t.id_usuario_responsable = ur.id_usuario
-WHERE
-    1=1
-";
+                t.id_tramite,
+                uc.nombre AS nombre,
+                uc.apellido AS apellido,
+                ur.nombre AS responsable,
+                tt.descripcion AS tipo_tramite,
+                te.descripcion AS estado_tramite,
+                t.descripcion,
+                t.comentarios,
+                t.fecha_creacion
+            FROM
+                tramites AS t
+                LEFT JOIN tramites_tipo AS tt ON t.id_tramite_tipo = tt.id_tramite_tipo
+                LEFT JOIN tramite_estados AS te ON t.id_estado_tramite = te.id_estado_tramite
+                LEFT JOIN tramite_adjuntos AS ta ON t.id_tramite = ta.id_tramite
+                LEFT JOIN usuarios AS uc ON t.id_usuario_creacion = uc.id_usuario
+                LEFT JOIN usuarios AS ur ON t.id_usuario_responsable = ur.id_usuario
+            WHERE
+                t.fecha_creacion = (
+                    SELECT MAX(fecha_creacion)
+                    FROM tramites AS t2
+                    WHERE t2.id_tramite = t.id_tramite
+                )";
 
-// El resto de tu código de filtros...
-
-
+    // Agregar condiciones dinámicas
     if ($id_tramite != null) {
-        $sql .= " AND id_tramite =$id_tramite ";
+        $sql .= " AND t.id_tramite = $id_tramite ";
     }
     if ($id_usuario_creacion != null) {
-        $sql .= " AND LOWER(id_usuario_creacion) like LOWER('%$id_usuario_creacion%')";
+        $sql .= " AND LOWER(t.id_usuario_creacion) LIKE LOWER('%$id_usuario_creacion%')";
     }
     if ($id_usuario_responsable != null) {
-        $sql .= " AND LOWER(id_usuario_responsable) like LOWER('%$id_usuario_responsable%')";
+        $sql .= " AND LOWER(t.id_usuario_responsable) LIKE LOWER('%$id_usuario_responsable%')";
     }
     if ($id_tramite_tipo != null) {
-        $sql .= " AND LOWER(id_tramite_tipo) like LOWER('%$id_tramite_tipo%')";
+        $sql .= " AND LOWER(t.id_tramite_tipo) LIKE LOWER('%$id_tramite_tipo%')";
     }
     if ($id_estado_tramite != null) {
-        $sql .= " AND LOWER(id_estado_tramite) like LOWER('%$id_estado_tramite%')";
+        $sql .= " AND LOWER(t.id_estado_tramite) LIKE LOWER('%$id_estado_tramite%')";
     }
     if ($fecha_creacion != null) {
-        $sql .= " AND LOWER(fecha_creacion) like LOWER('%$fecha_creacion%')";
+        $sql .= " AND LOWER(t.fecha_creacion) LIKE LOWER('%$fecha_creacion%')";
     }
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
-    $aviso_tipo = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $tramites = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if (!$aviso_tipo) {
+    if (!$tramites) {
         http_response_code(404); // No encontrado
-        echo json_encode(['error' => 'No se encontraron Tipo de tramite']);
+        echo json_encode(['error' => 'No se encontraron tipos de trámite']);
         return;
     }
 
-    echo json_encode($aviso_tipo);
+    echo json_encode($tramites);
 }
