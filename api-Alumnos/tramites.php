@@ -172,7 +172,6 @@ function borrarTramites()
     echo json_encode(['mensaje' => 'Tramite eliminado Con Exito!']);
 }
 
-
 function listarTramites()
 {
     global $pdo;
@@ -185,29 +184,27 @@ function listarTramites()
     $descripcion = isset($_GET['descripcion']) ? $_GET['descripcion'] : null;
     $fecha_creacion = isset($_GET['fecha_creacion']) ? $_GET['fecha_creacion'] : null;
 
-    $sql = "SELECT
-                t.id_tramite,
-                uc.nombre AS nombre,
-                uc.apellido AS apellido,
-                ur.nombre AS responsable,
-                tt.descripcion AS tipo_tramite,
-                te.descripcion AS estado_tramite,
-                t.descripcion,
-                t.comentarios,
-                t.fecha_creacion
-            FROM
-                tramites AS t
-                LEFT JOIN tramites_tipo AS tt ON t.id_tramite_tipo = tt.id_tramite_tipo
-                LEFT JOIN tramite_estados AS te ON t.id_estado_tramite = te.id_estado_tramite
-                LEFT JOIN tramite_adjuntos AS ta ON t.id_tramite = ta.id_tramite
-                LEFT JOIN usuarios AS uc ON t.id_usuario_creacion = uc.id_usuario
-                LEFT JOIN usuarios AS ur ON t.id_usuario_responsable = ur.id_usuario
-            WHERE
-                t.fecha_creacion = (
-                    SELECT MAX(fecha_creacion)
-                    FROM tramites AS t2
-                    WHERE t2.id_tramite = t.id_tramite
-                )";
+    $sql = "SELECT *
+            FROM (
+                SELECT
+                    t.id_tramite,
+                    uc.nombre AS nombre,
+                    uc.apellido AS apellido,
+                    ur.nombre AS responsable,
+                    tt.descripcion AS tipo_tramite,
+                    te.descripcion AS estado_tramite,
+                    t.descripcion,
+                    t.comentarios,
+                    t.fecha_creacion,
+                    ROW_NUMBER() OVER (PARTITION BY t.id_tramite ORDER BY t.fecha_creacion DESC) AS rn
+                FROM
+                    tramites AS t
+                    LEFT JOIN tramites_tipo AS tt ON t.id_tramite_tipo = tt.id_tramite_tipo
+                    LEFT JOIN tramite_estados AS te ON t.id_estado_tramite = te.id_estado_tramite
+                    LEFT JOIN tramite_adjuntos AS ta ON t.id_tramite = ta.id_tramite
+                    LEFT JOIN usuarios AS uc ON t.id_usuario_creacion = uc.id_usuario
+                    LEFT JOIN usuarios AS ur ON t.id_usuario_responsable = ur.id_usuario
+                WHERE 1 = 1";
 
     // Agregar condiciones dinámicas
     if ($id_tramite != null) {
@@ -228,6 +225,8 @@ function listarTramites()
     if ($fecha_creacion != null) {
         $sql .= " AND LOWER(t.fecha_creacion) LIKE LOWER('%$fecha_creacion%')";
     }
+
+    $sql .= ") AS subquery WHERE rn = 1"; // Filtrar solo los registros con rn = 1
 
     $stmt = $pdo->prepare($sql);
     $stmt->execute();

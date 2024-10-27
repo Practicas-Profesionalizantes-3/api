@@ -8,6 +8,9 @@ try {
         case 'PUT':
             modificarComentariosTramites();
             break;
+        case 'GET':
+            obtenerComentariosTramite();
+            break;
         default:
             http_response_code(405); // Método no permitido
             echo json_encode(['error' => 'Método no permitido']);
@@ -20,7 +23,7 @@ try {
     echo json_encode(['error' => $e->getMessage()]);
 }
 
-//Mofica los comentarios de los tramites
+// Modifica los comentarios de los trámites
 function modificarComentariosTramites()
 {
     global $pdo;
@@ -94,4 +97,47 @@ function modificarComentariosTramites()
         echo json_encode(["codigo" => 500, "success" => false, "mensaje" => "Error al crear la notificación."]);
     }
 }
+function obtenerComentariosTramite()
+{
+    global $pdo;
 
+    // Obtener y validar el id_tramite
+    $id_tramite = isset($_GET['id_tramite']) ? (int)$_GET['id_tramite'] : null;
+    
+    // Verificar que el id_tramite sea un número válido
+    if ($id_tramite === null) {
+        http_response_code(400); // Bad Request
+        echo json_encode(['error' => 'Se debe proporcionar un id_tramite']);
+        return;
+    }
+
+    // Inicializar la consulta básica
+    $sql = "SELECT comentarios, fecha_creacion FROM `tramites` WHERE id_tramite = ?";
+    $params = [$id_tramite]; // Array para los parámetros de ejecución
+
+    // Condiciones dinámicas
+    if (isset($_GET['comentarios']) && $_GET['comentarios'] !== '') {
+        $sql .= " AND LOWER(comentarios) LIKE LOWER(?)";
+        $params[] = "%" . strtolower($_GET['comentarios']) . "%"; // Añadir el comentario a los parámetros
+    }
+    if (isset($_GET['fecha_creacion']) && $_GET['fecha_creacion'] !== '') {
+        $sql .= " AND LOWER(fecha_creacion) LIKE LOWER(?)";
+        $params[] = "%" . strtolower($_GET['fecha_creacion']) . "%"; // Añadir la fecha a los parámetros
+    }
+
+    // Agregar el ordenamiento por fecha_creacion
+    $sql .= " ORDER BY fecha_creacion DESC";
+
+    // Preparar y ejecutar la consulta
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $tramite_comentario = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if (!$tramite_comentario) {
+        http_response_code(404); // No encontrado
+        echo json_encode(['error' => 'No se encontraron comentarios']);
+        return;
+    }
+
+    echo json_encode($tramite_comentario);
+}
