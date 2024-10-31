@@ -195,6 +195,7 @@ function listarTramites()
     uc.nombre AS nombre,
     uc.apellido AS apellido,
     ur.nombre AS responsable,
+    ur.apellido AS responsable_apellido,
     tt.descripcion AS tipo_tramite,
     te.descripcion AS estado_tramite,
     t.descripcion,
