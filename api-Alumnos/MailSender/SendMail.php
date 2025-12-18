@@ -43,12 +43,12 @@ function SendMail($sendTo, $asunto, $mensaje, $fromApi)
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'santiagopruebas22@gmail.com';
-        $mail->Password   = 'qeke ljtu tked uacc';
+        $mail->Username   = 'jardineriageneral2021@gmail.com';
+        $mail->Password   = 'yfya loas iybd ohov';
         $mail->SMTPSecure = 'tls';
         $mail->Port       = 587;
 
-        $mail->setFrom('santiagopruebas22@gmail.com', 'Departamento de Alumnos');
+        $mail->setFrom('jardineriageneral2021@gmail.com', 'Departamento de Alumnos');
         $mail->addAddress($sendTo);
 
         $mail->isHTML(true);
